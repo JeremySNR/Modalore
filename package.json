@@ -33,7 +33,7 @@
     "@vitejs/plugin-react": "latest",
     "electron": "45.2.2",
     "electron-builder": "26.18.0",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "8.3.5"
@@ -41,11 +41,35 @@
   "build": {
     "appId": "org.modalore.desktop",
     "productName": "Modalore",
-    "directories": { "output": "release" },
-    "files": ["dist/**/*", "package.json"],
-    "extraResources": [{ "from": "runtime", "to": "runtime" }],
-    "win": { "target": ["nsis", "portable"], "artifactName": "Modalore-${version}-${arch}-${target}.${ext}" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false, "createDesktopShortcut": true },
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "Modalore-${version}-${arch}-${target}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true
+    },
     "publish": null
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
   }
 }

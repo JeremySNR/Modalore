@@ -1,0 +1,4 @@
+displayName = Modalore Rules
+author = Modalore
+version = 0.1.0
+side = Both
