@@ -20,11 +20,11 @@ let codexState: Snapshot['codex'] = { available: false, signedIn: false, message
 let active: AbortController | undefined;
 let mutating = false;
 const send = (progress: Progress) => { if (!window.isDestroyed()) window.webContents.send('modalore:progress', progress); };
-const runtimeDirectory = () => app.isPackaged ? path.join(process.resourcesPath, 'runtime') : path.join(app.getAppPath(), 'runtime');
+const runtimeDirectory = () => app.isPackaged ? path.join(process.resourcesPath, 'runtime', 'ModaloreRules') : path.join(app.getAppPath(), 'runtime', 'ModaloreRules');
 const plainRecipe = (input: unknown) => {
   if (!input || typeof input !== 'object') throw new Error('A recipe is required.');
   const r = input as Record<string, unknown>;
-  return validateRecipe({ schemaVersion: r.schemaVersion, title: r.title, description: r.description, damageMultiplier: r.damageMultiplier, enemySpeedMultiplier: r.enemySpeedMultiplier, coinMultiplier: r.coinMultiplier });
+  return validateRecipe({ schemaVersion: r.schemaVersion, title: r.title, description: r.description, damageMultiplier: r.damageMultiplier, enemyHealthMultiplier: r.enemyHealthMultiplier, coinMultiplier: r.coinMultiplier });
 };
 async function detect() {
   const detected = await game.detectGame();
@@ -81,7 +81,7 @@ function registerHandlers() {
     send({ stage: 'create', message: 'Codex is working on your recipe', status: 'running' });
     try {
       const result = await codex.runTurn({ workspace, signal: active.signal, timeoutMs: 180000,
-        prompt: artifactPrompt(`Edit recipe.json. Supported schema is exactly {schemaVersion:1,title:string (1–80 chars),description:string (1–600 chars),damageMultiplier:number,enemySpeedMultiplier:number,coinMultiplier:number}. All three multipliers must be finite between 0.5 and 3. No additional fields. These are the ONLY supported mechanics: player damage, grounded nonboss enemy horizontal speed, and enemy coin rewards. If the request needs any unsupported mechanic, do not pretend to implement it: leave the recipe unchanged and explain the limitation. Preserve unspecified fields. The user's change request follows:\n${request}`, 'recipe.json'),
+        prompt: artifactPrompt(`Edit recipe.json. Supported schema is exactly {schemaVersion:1,title:string (1–80 chars),description:string (0–500 chars),damageMultiplier:number,enemyHealthMultiplier:number,coinMultiplier:number}. All three multipliers must be finite between 0.5 and 3. No additional fields. These are the ONLY supported mechanics: player damage, enemy health, and enemy coin rewards. If the request needs any unsupported mechanic, do not pretend to implement it: leave the recipe unchanged and explain the limitation. Preserve unspecified fields. The user's change request follows:\n${request}`, 'recipe.json'),
         onProgress: p => send({ stage: 'create', message: 'Codex is working on your recipe', detail: `${p.method}${p.message ? ` · ${p.message}` : ''}`, status: 'running' }),
         onApproval: async approval => {
           if (active?.signal.aborted) return 'decline';
@@ -96,7 +96,7 @@ function registerHandlers() {
       const file = path.join(workspace, 'recipe.json'), stat = await fs.lstat(file);
       if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 16384) throw new Error('Codex produced an invalid artifact. Your previous version is unchanged.');
       const recipe = validateRecipe(JSON.parse(await fs.readFile(file, 'utf8')));
-      if (JSON.stringify(recipe) === JSON.stringify(project.recipe)) throw new Error(result.message.slice(0, 1200) || 'The recipe did not change. Try changing damage, enemy speed, or coin rewards.');
+      if (JSON.stringify(recipe) === JSON.stringify(project.recipe)) throw new Error(result.message.slice(0, 1200) || 'The recipe did not change. Try changing damage, enemy health, or coin rewards.');
       if (active.signal.aborted) throw new Error('Creation stopped. Your previous version is unchanged.');
       const updated = await store.update(id, recipe);
       send({ stage: 'saved', message: 'Your new recipe is saved', detail: 'Schema checked. Building and gameplay are separate checks.', status: 'complete' }); return updated;

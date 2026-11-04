@@ -6,7 +6,8 @@ import { promisify } from 'node:util';
 
 type RpcMessage = { id?: number | string; method?: string; params?: Record<string, any>; result?: any; error?: { message?: string } };
 export type CodexProgress = { method: string; message?: string };
-export type CodexTurnResult = { threadId: string; turnId: string; status: 'completed' | 'failed' | 'interrupted'; message: string };
+export type CodexTurnError = 'usageLimitExceeded' | 'rateLimitExceeded' | 'sessionBudgetExceeded' | 'contextWindowExceeded' | 'unauthorized' | 'sandboxError' | 'modelNotFound' | 'other';
+export type CodexTurnResult = { threadId: string; turnId: string; status: 'completed' | 'failed' | 'interrupted'; message: string; errorCode?: CodexTurnError };
 export type CodexModel = { id: string; displayName: string; isDefault: boolean };
 export type CodexApproval = { kind: 'fileChange' | 'commandExecution'; reason?: string; command?: string; cwd?: string; grantRoot?: string; paths: string[] };
 export type RunTurnOptions = { workspace: string; prompt: string; threadId?: string; model?: string; signal?: AbortSignal; timeoutMs?: number; onProgress?: (event: CodexProgress) => void; onApproval?: (approval: CodexApproval) => Promise<'accept' | 'decline'> };
@@ -155,7 +156,12 @@ export class CodexClient {
         if (event.method === 'item/started' || event.method === 'item/completed') { try { options.onProgress?.({ method: event.method, message: typeof p.item?.type === 'string' ? p.item.type : undefined }); } catch { /* UI callbacks cannot disrupt protocol handling. */ } }
         if (event.method === 'turn/completed' && p.turn?.id && (!turnId || p.turn.id === turnId)) {
           const status = p.turn.status;
-          if (status === 'completed' || status === 'failed' || status === 'interrupted') finish({ threadId: currentThread, turnId: p.turn.id, status, message: redact(message) });
+          if (status === 'completed' || status === 'failed' || status === 'interrupted') {
+            const info = p.turn.error?.codexErrorInfo;
+            const known: CodexTurnError[] = ['usageLimitExceeded', 'rateLimitExceeded', 'sessionBudgetExceeded', 'contextWindowExceeded', 'unauthorized', 'sandboxError', 'modelNotFound'];
+            const errorCode = status === 'failed' ? (known.includes(info) ? info as CodexTurnError : 'other') : undefined;
+            finish({ threadId: currentThread, turnId: p.turn.id, status, message: redact(message), errorCode });
+          }
           else rejectFinish(new Error('Unexpected Codex turn status'));
         }
       };

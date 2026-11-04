@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-label="Modalore. Your games. Your rules.">
+ <rect width="1280" height="360" fill="#1b1d20"/>
+ <path d="M866 360V260h60v-45h72v35h56v-85h70v-50h70v55h86v190" fill="#2b3135"/>
+ <path d="M800 360v-60h80v-40h95v55h64v-45h80v-40h65v65h96v65" fill="#35443f"/>
+ <path d="M65 90l18-18 18 18-18 18zM89 66l18-18 18 18-18 18zM113 90l18-18 18 18-18 18z" stroke="#dda752" stroke-width="3" fill="none"/>
+ <text x="65" y="179" fill="#f2f3f1" font-family="Segoe UI,Arial,sans-serif" font-size="64" font-weight="650">Modalore</text>
+ <text x="68" y="235" fill="#c1c5c7" font-family="Segoe UI,Arial,sans-serif" font-size="29">Your games. Your rules.</text>
+ <text x="68" y="306" fill="#989fa3" font-family="Segoe UI,Arial,sans-serif" font-size="18">Local creation · Shareable recipes · Open source</text>
+ <path d="M1030 172v-36h18v-18h18v18h18v36z" fill="#dda752"/><rect x="1042" y="172" width="12" height="18" fill="#1b1d20"/><rect x="1060" y="172" width="12" height="18" fill="#1b1d20"/>
+</svg>

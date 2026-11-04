@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-04T21:42:44.724Z",
+  "platform": "win32",
+  "readyMs": 220,
+  "navigationAutomationRoundtripMs": [
+    90,
+    25,
+    16,
+    17,
+    16
+  ],
+  "processes": [
+    {
+      "type": "Browser",
+      "workingSetKB": 109016,
+      "cpu": 0
+    },
+    {
+      "type": "GPU",
+      "workingSetKB": 113316,
+      "cpu": 0
+    },
+    {
+      "type": "Utility",
+      "workingSetKB": 49340,
+      "cpu": 0
+    },
+    {
+      "type": "Tab",
+      "workingSetKB": 101800,
+      "cpu": 0
+    }
+  ],
+  "rendererErrors": [],
+  "checks": [
+    "real Electron preload",
+    "no renderer require",
+    "create project",
+    "update project",
+    "persisted snapshot",
+    "library navigation"
+  ],
+  "disclaimer": "One local development launch, not a controlled cold-start benchmark. Navigation includes automation overhead."
+}

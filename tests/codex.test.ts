@@ -61,6 +61,15 @@ test('failed requests redact secrets and connection loss while starting a turn i
   }
 });
 
+test('turn failure exposes a documented limit code without raw error details', async () => {
+  const client = clientFor('quota');
+  try {
+    const result = await client.runTurn({ workspace: process.cwd(), prompt: 'test' });
+    assert.equal(result.status, 'failed'); assert.equal(result.errorCode, 'usageLimitExceeded');
+    assert.doesNotMatch(JSON.stringify(result), /private details/);
+  } finally { client.close(); }
+});
+
 test('unexpected exit permits a fresh connection', async () => {
   let starts = 0;
   const client = new CodexClient('codex', () => spawn(process.execPath, [fake, ++starts === 1 ? 'exit' : 'normal'], { stdio: 'pipe' }));

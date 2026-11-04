@@ -1,0 +1,18 @@
+name: Report a problem
+description: Help us reproduce a problem in Modalore
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach credentials, private Codex logs or game saves."
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: What did you expect instead? }
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce }
+    validations: { required: true }
+  - type: input
+    id: versions
+    attributes: { label: Versions, description: Modalore, Windows, Codex CLI and tModLoader (where relevant) }
+    validations: { required: true }
