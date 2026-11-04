@@ -11,3 +11,11 @@ Reviewed 4 November 2026. These are product design references, not claims that M
 ## Direction considered
 
 A large editorial serif direction gave discovery visual identity, but used space that should help users find and launch creations, and its small uppercase labels hurt scanning. The selected direction is a compact graphite Windows game launcher: system sans typography, clear rows, neutral surfaces, original labelled concept art and amber reserved for primary actions. It avoids simulated gameplay imagery and social metrics. Native startup and launch performance are measured separately; reducing decorative assets and remote fonts is a design choice, not proof of speed.
+
+## Alternatives and review checklist
+
+- **System Segoe UI Variable / Segoe UI:** selected for Windows familiarity, readable sizes and zero font download. **Inter loaded remotely** was considered for its neutral forms, but adds a network dependency and does not improve the Windows fit enough to justify it. A locally bundled font remains an option if cross-platform testing identifies a need.
+- **Editorial serif:** considered for a stronger magazine-like identity, but large headlines and italics consumed working space and reduced scanability. System sans keeps the game and project names prominent.
+- **Neutral graphite:** selected to let game artwork and state information stand out while maintaining a consistent tool surface. **Warm olive** was considered but made selection, content and decorative areas compete; amber is retained for primary actions and meaningful emphasis.
+
+Before accepting a screen, check for generic decorative choices that obscure the task: oversized slogans, excessive uppercase tracking, repeated filler cards, invented social proof, gradients or glowing accents without meaning, generic marketing copy, and imagery presented as gameplay when it is not. These are visual review criteria, not claims about how a design was produced. Check keyboard focus, contrast, reduced motion, narrow widths and long names alongside visual composition.

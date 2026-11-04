@@ -4,7 +4,7 @@ Checked on Windows x64, 4 November 2026. This record separates real integrations
 
 | Area | Evidence | Limit |
 | --- | --- | --- |
-| Local Codex | Installed `0.166.0-alpha.6`: actual account read, model discovery, progress, approved artifact creation, follow-up revision, cancellation | Experimental app-server; no claim of broad version support or enforced sandbox isolation |
+| Local Codex | Installed `0.166.0-alpha.6`: actual account read, model discovery, progress, approved artifact creation, follow-up revision, cancellation. An isolated npm install of stable `0.166.0` also passed native executable resolution, initialization and account read. | No claim of broad version support or enforced sandbox isolation; stable version has connection evidence, not the full creation probe |
 | Real recipe journey | Codex created current-schema recipe, revised coins, validated and saved it, exported/imported into a second clean profile; interrupted follow-up retained saved versions | No game process involved; consumes the configured account allowance |
 | Desktop | Actual Electron preload, isolated renderer, project create/update, persistence and library navigation exercised | Local development machine, not a fresh Windows installation |
 | Import and recovery | Automated tests cover hash/field rejection, clean profiles, invalid updates, recipe rollback, save checkpoint restore, journal recovery and linked-directory rejection | Filesystem and simulated process tests; not in-game save validation |
@@ -17,7 +17,7 @@ Checked on Windows x64, 4 November 2026. This record separates real integrations
 
 `npm run check` runs type checking, the integration tests and a production build. `npm run test:ui` serves the app and runs browser interactions/accessibility checks. `node scripts/smoke-desktop.mjs` launches real Electron. `npx tsx scripts/probe-codex.ts` is an optional real-account probe; it uses allowance and confines its artifacts to `.local`.
 
-The first complete local unrestricted test run passed all 22 Node tests, including the symlink case, plus both served UI tests. Restricted Windows runs can skip link creation because the development sandbox denies it. CI and subsequent additions are visible in [GitHub Actions](https://github.com/JeremySNR/Modalore/actions).
+The release-candidate local unrestricted run passed all 23 Node tests, including the symlink case, plus all three served UI tests. Restricted Windows runs can skip link creation because the development sandbox denies it. CI and subsequent additions are visible in [GitHub Actions](https://github.com/JeremySNR/Modalore/actions).
 
 ## Performance
 

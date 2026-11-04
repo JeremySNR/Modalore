@@ -40,14 +40,14 @@ Profiles live under `%APPDATA%/Modalore/workshop` in downloaded builds. Developm
 
 ## Common fixes
 
-| What you see | What to do |
-| --- | --- |
-| Desktop connection unavailable | Open the downloaded desktop application. A browser preview has no native bridge. |
-| Codex not found | Install the official CLI, ensure it is available to your Windows account, restart Modalore, and check again. |
-| Signed out | Finish the browser sign-in and check the connection again. |
-| Game not found | Install tModLoader through Steam, or choose the folder containing its DLL. |
-| Build prerequisites missing | Start tModLoader through Steam once, then retry. Report your tModLoader version if it persists. |
-| Invalid package | Ask for a fresh export. Do not edit a package’s integrity hash manually. |
-| Unsupported change | Try changing damage, enemy health or coins instead. |
+| What you see                   | What to do                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Desktop connection unavailable | Open the downloaded desktop application. A browser preview has no native bridge.                             |
+| Codex not found                | Install the official CLI, ensure it is available to your Windows account, restart Modalore, and check again. |
+| Signed out                     | Finish the browser sign-in and check the connection again.                                                   |
+| Game not found                 | Install tModLoader through Steam, or choose the folder containing its DLL.                                   |
+| Build prerequisites missing    | Start tModLoader through Steam once, then retry. Report your tModLoader version if it persists.              |
+| Invalid package                | Ask for a fresh export. Do not edit a package’s integrity hash manually.                                     |
+| Unsupported change             | Try changing damage, enemy health or coins instead.                                                          |
 
 For bug reports, use [GitHub Issues](https://github.com/JeremySNR/Modalore/issues). Include app/Windows/tModLoader/CLI versions and reproduction steps, not private logs or credentials.

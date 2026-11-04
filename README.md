@@ -7,6 +7,8 @@
   <a href="https://github.com/JeremySNR/Modalore/issues">Feedback</a>
 </p>
 
+[![Checks](https://github.com/JeremySNR/Modalore/actions/workflows/check.yml/badge.svg)](https://github.com/JeremySNR/Modalore/actions/workflows/check.yml) [![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **Modalore is an open-source desktop app for making small changes to games you own.** Start with a recipe, adjust it with simple controls, or describe a change to your local Codex CLI. Save the result and send the recipe to a friend.
 
 **Early Windows preview — not a finished mod launcher.** Local recipe creation, revision, import/export and recovery are implemented. Real Codex artifact creation, follow-up and cancellation have been exercised. Terraria/tModLoader was unavailable during development: the runtime build, game launch, game compatibility and in-game save isolation still need validation. The app labels those gaps and asks before attempting an experimental play session. See the [verification record](docs/VERIFICATION.md).
@@ -29,13 +31,13 @@ Recipes change three bounded values from 50% to 300%: player damage, hostile ene
 
 Requests such as “Defeated enemies join my army” require mechanics that are **not implemented**. Codex is instructed to explain that boundary. Imported recipes contain data only; they cannot add executable code.
 
-| Available in this preview | Still to prove or build |
-| --- | --- |
-| Windows desktop UI, local library, original concept illustrations | Gameplay footage and a verified playable gallery |
-| Real local Codex app-server connection, approvals, progress and stop | Broad stable-CLI compatibility and clean-machine onboarding |
-| Validated recipes, immutable versions, hash-checked import/export | Game build and actual gameplay acceptance tests |
-| Separate profile directories and tested save-copy/restore operations | In-game isolation validation, copying an existing save |
-| File sharing with parent-version attribution | Hosted publishing, live share pages, rankings or multiplayer |
+| Available in this preview                                            | Still to prove or build                                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Windows desktop UI, local library, original concept illustrations    | Gameplay footage and a verified playable gallery             |
+| Real local Codex app-server connection, approvals, progress and stop | Broad stable-CLI compatibility and clean-machine onboarding  |
+| Validated recipes, immutable versions, hash-checked import/export    | Game build and actual gameplay acceptance tests              |
+| Separate profile directories and tested save-copy/restore operations | In-game isolation validation, copying an existing save       |
+| File sharing with parent-version attribution                         | Hosted publishing, live share pages, rankings or multiplayer |
 
 There are no fake live share links, download counts, usage balances or gameplay recordings. A successful schema check is not a successful game test. Package hashes check integrity; they do not establish who made a file.
 
