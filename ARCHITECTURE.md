@@ -27,7 +27,7 @@ The local default model/configuration is preserved. The adapter supports model d
 
 App-owned workshop storage contains project metadata, per-project immutable recipe files addressed by SHA-256, a current pointer, job workspaces, profiles and checkpoints. JSON writes use staging and rename. Game installation stages a locally built artifact, verifies its hash, and preserves prior installed files on failure. Imported recipes create fresh profiles. There is no automatic dependency upgrade or arbitrary third-party mod mix.
 
-Checkpoints contain only profile Worlds and Players. Recipe rollback and save restore are separate operations. Restore stages the new save tree and rolls back on a failed swap. Original Terraria saves are never enumerated/copied automatically. Running profiles block mutation while the current app tracks their child process; see the restart-lock limitation in the verification record.
+Checkpoints contain only profile Worlds and Players. Recipe rollback and save restore are separate operations. Restore stages the new save tree and rolls back on a failed swap; recovery journals cover interrupted save swaps and mod installation. Original Terraria saves are never enumerated/copied automatically. Persistent process locks block mutation across application restarts. A narrow crash window between child process creation and recording its PID remains; stronger operating-system coordination is a stable-release requirement.
 
 ## Execution evidence
 
@@ -35,7 +35,7 @@ Schema, build, process start, and observed gameplay are different levels. Export
 
 ## Sharing
 
-The shipped contract is a bounded `.modalore.json` package with format version, recipe, dependencies, parent hash, hash and evidence. No archives, arbitrary file trees, credentials, game content or saves. A later hosted share page should address an immutable package by digest and show exactly the same dependency/evidence information. No publisher backend or live share URL exists yet.
+The shipped contract is a bounded `.modalore.json` package with format version, recipe, dependencies, parent hash, hash and evidence. The parent hash identifies canonical recipe content; the outer hash identifies the entire package. Import preserves the package's ancestry, while a remix points to the prior recipe hash. Reverting restores prior content and ancestry together. See [package format](docs/PACKAGE_FORMAT.md). No archives, arbitrary file trees, credentials, game content or saves. A later hosted share page should address an immutable package by digest and show exactly the same dependency/evidence information. No publisher backend or live share URL exists yet.
 
 ## Performance
 
