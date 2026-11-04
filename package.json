@@ -1,0 +1,51 @@
+{
+  "name": "modalore",
+  "version": "0.1.0-alpha.1",
+  "description": "Your games. Your rules. A local-first modding studio powered by your Codex CLI.",
+  "author": "Modalore contributors",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "dist/main/index.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build && node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:ui": "playwright test",
+    "check": "npm run typecheck && npm test && npm run build",
+    "start": "electron .",
+    "dist:win": "npm run build && electron-builder --win nsis portable --x64",
+    "dist:dir": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "lucide-react": "^0.577.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "latest",
+    "electron": "45.2.2",
+    "electron-builder": "26.18.0",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "8.3.5"
+  },
+  "build": {
+    "appId": "org.modalore.desktop",
+    "productName": "Modalore",
+    "directories": { "output": "release" },
+    "files": ["dist/**/*", "package.json"],
+    "extraResources": [{ "from": "runtime", "to": "runtime" }],
+    "win": { "target": ["nsis", "portable"], "artifactName": "Modalore-${version}-${arch}-${target}.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false, "createDesktopShortcut": true },
+    "publish": null
+  }
+}
