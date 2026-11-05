@@ -1,34 +1,34 @@
 {
-  "checkedAt": "2026-11-05T08:14:48.806Z",
+  "checkedAt": "2026-11-05T16:41:15.392Z",
   "platform": "win32",
-  "packaged": false,
-  "readyMs": 217,
+  "packaged": true,
+  "readyMs": 498,
   "navigationAutomationRoundtripMs": [
-    90,
-    23,
-    24,
-    16,
-    17
+    104,
+    19,
+    19,
+    19,
+    19
   ],
   "processes": [
     {
       "type": "Browser",
-      "workingSetKB": 117360,
+      "workingSetKB": 121944,
       "cpu": 0
     },
     {
       "type": "GPU",
-      "workingSetKB": 127288,
+      "workingSetKB": 143720,
       "cpu": 0
     },
     {
       "type": "Utility",
-      "workingSetKB": 49708,
+      "workingSetKB": 48340,
       "cpu": 0
     },
     {
       "type": "Tab",
-      "workingSetKB": 163492,
+      "workingSetKB": 170136,
       "cpu": 0
     }
   ],

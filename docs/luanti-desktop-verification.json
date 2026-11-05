@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-11-05T08:13:38.799Z",
+  "checkedAt": "2026-11-05T16:41:42.654Z",
   "platform": "win32",
-  "packaged": false,
+  "packaged": true,
   "engine": "5.18.0",
   "gameCommit": "9e895af6e9feb98332fa1a778001442f5669bc20",
   "checks": [
