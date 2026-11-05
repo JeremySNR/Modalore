@@ -62,9 +62,11 @@ Profiles live under `%APPDATA%/Modalore/workshop` in downloaded builds. Developm
 | Desktop connection unavailable | Open the downloaded desktop application. A browser preview has no native bridge.                             |
 | Codex not found                | Install the official CLI, ensure it is available to your Windows account, restart Modalore, and check again. |
 | Signed out                     | Finish the browser sign-in and check the connection again.                                                   |
-| Game not found                 | Install tModLoader through Steam, or choose the folder containing its DLL.                                   |
-| Build prerequisites missing    | Start tModLoader through Steam once, then retry. Report your tModLoader version if it persists.              |
+| Free game not found            | Open Setup and choose Set up free game. For an existing pinned Luanti installation, choose its folder containing `bin` and `games`. |
+| Game closed before you joined  | Your recipe is still saved. Open Technical details for the game log, then try Play again. Report the error if it repeats. |
+| Terraria not found             | For experimental Terraria recipes only: install tModLoader through Steam, or choose the folder containing its DLL. |
+| Build prerequisites missing    | For Terraria only: start tModLoader through Steam once, then retry. Report your tModLoader version if it persists. |
 | Invalid package                | Ask for a fresh export. Do not edit a package’s integrity hash manually.                                     |
-| Unsupported change             | Try changing damage, enemy health or coins instead.                                                          |
+| Unsupported change             | For Minetest Game, try speed, jump or gravity. Experimental Terraria recipes support damage, enemy health and coins. |
 
-For bug reports, use [GitHub Issues](https://github.com/JeremySNR/Modalore/issues). Include app/Windows/tModLoader/CLI versions and reproduction steps, not private logs or credentials.
+For bug reports, use [GitHub Issues](https://github.com/JeremySNR/Modalore/issues). Include the app, Windows, relevant game and CLI versions with reproduction steps. Do not include private logs, saves or credentials.

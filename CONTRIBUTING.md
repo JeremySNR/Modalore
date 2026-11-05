@@ -15,7 +15,7 @@ Start with [Getting started](docs/GETTING_STARTED.md) and [Architecture](ARCHITE
 
 Keep discovery, prerequisites, build/validation, profile storage, launch, logs and recovery behind a game adapter. Prove one complete journey before adding generalized abstractions. Preserve original saves and avoid requiring an AI account to play a finished artifact.
 
-For Luanti changes, `node scripts/smoke-luanti.mjs` checks actual downloads, native Play, fresh-world sharing and checkpoint restore in `.local`. It opens two short game sessions and downloads about 25 MB. `npx tsx scripts/probe-luanti.ts <runtime-folder>` additionally exercises real Codex creation/revision and consumes the configured account allowance. Neither belongs in the default offline test suite. Record API readback separately from physical movement and visual gameplay evidence.
+For Luanti changes, `node scripts/smoke-luanti.mjs` checks actual downloads, native Play, same-world revision, fresh-world sharing, checkpoint restore and startup failure/retry in `.local`. It opens several short game sessions and downloads about 25 MB. Set `MODALORE_TEST_LUANTI_ROOT` to an existing pinned runtime to select it through the test's folder picker instead of downloading again. `npx tsx scripts/probe-luanti.ts <runtime-folder>` additionally exercises real Codex creation/revision and consumes the configured account allowance. `npx tsx scripts/probe-luanti-motion.ts <runtime-folder>` records motion using the engine's random input without Codex. These probes do not belong in the default offline test suite. Record API readback, motion telemetry and visual gameplay evidence separately.
 
 ## Design and performance
 
