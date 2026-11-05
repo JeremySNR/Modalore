@@ -496,22 +496,12 @@ function registerHandlers() {
             message: "Waiting for your player to join the new world",
             status: "running",
           });
-          let report: Awaited<ReturnType<typeof luanti.readLuantiReport>> =
-            null;
-          const deadline = Date.now() + 20000;
-          while (!report && Date.now() < deadline && !active.signal.aborted) {
-            try {
-              report = await luanti.readLuantiReport(
-                store.root,
-                id,
-                launched.sessionId,
-              );
-            } catch (error) {
-              if (!(error instanceof SyntaxError)) throw error;
-            }
-            if (!report)
-              await new Promise((resolve) => setTimeout(resolve, 250));
-          }
+          const report = await luanti.waitForLuantiReport(
+            store.root,
+            id,
+            launched,
+            { signal: active.signal },
+          );
           if (active.signal.aborted)
             throw new Error(
               "Game launch stopped. Your saved recipe is unchanged.",
@@ -542,6 +532,10 @@ function registerHandlers() {
           send({
             stage: "launch",
             message: redact((error as Error).message),
+            detail:
+              error instanceof luanti.LuantiStartupError
+                ? redact(error.detail)
+                : undefined,
             status: active.signal.aborted ? "cancelled" : "error",
           });
           throw error;

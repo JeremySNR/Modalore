@@ -7,6 +7,8 @@ import {
   detectLuanti,
   generateLuantiSource,
   readLuantiReport,
+  waitForLuantiReport,
+  LuantiStartupError,
 } from "../src/main/game/luanti.js";
 
 const recipe = {
@@ -89,4 +91,85 @@ test("detection rejects missing installation", async () => {
     (await detectLuanti([path.resolve(".local/nonexistent-luanti")])).found,
     false,
   );
+});
+
+test("startup detects a closed process immediately and reads only a bounded owned game log", async () => {
+  const dir = await temporary();
+  try {
+    await createProfile(dir, "one");
+    const version = await installRecipe(dir, "one", recipe);
+    const logPath = path.join(
+      dir,
+      "profiles",
+      "one",
+      "luanti-00000000-0000-0000-0000-000000000001.log",
+    );
+    await fs.writeFile(
+      logPath,
+      "old output\n".repeat(6000) + "ERROR: video driver could not start\n",
+    );
+    const launch = {
+      sessionId: 123,
+      logPath,
+      exited: Promise.resolve({ code: 42, signal: null }),
+    };
+    await assert.rejects(
+      waitForLuantiReport(dir, "one", launch),
+      (e: unknown) => {
+        assert.ok(e instanceof LuantiStartupError);
+        assert.match(e.message, /closed before your player joined/);
+        assert.match(e.detail, /code 42/);
+        assert.match(e.detail, /video driver could not start/);
+        assert.ok(e.detail.length < 16500);
+        return true;
+      },
+    );
+    const outside = path.join(dir, "private.txt");
+    await fs.writeFile(outside, "must not read this");
+    await assert.rejects(
+      waitForLuantiReport(dir, "one", { ...launch, logPath: outside }),
+      (e: unknown) => {
+        assert.ok(e instanceof LuantiStartupError);
+        assert.match(e.detail, /Game log unavailable/);
+        assert.doesNotMatch(e.detail, /must not read/);
+        return true;
+      },
+    );
+    const { readProfile } = await import("../src/main/game/adapter.js");
+    assert.equal((await readProfile(dir, "one")).hash, version.hash);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("startup wait distinguishes a live process from cancellation and keeps the saved recipe", async () => {
+  const dir = await temporary();
+  try {
+    await createProfile(dir, "one");
+    await installRecipe(dir, "one", recipe);
+    await fs.mkdir(
+      path.join(dir, "profiles", "one", "saves", "Worlds", "luanti"),
+      { recursive: true },
+    );
+    const launch = {
+      sessionId: 123,
+      logPath: "unused",
+      exited: new Promise<{
+        code: number | null;
+        signal: NodeJS.Signals | null;
+      }>(() => {}),
+    };
+    assert.equal(
+      await waitForLuantiReport(dir, "one", launch, { timeoutMs: 0 }),
+      null,
+    );
+    const abort = new AbortController();
+    abort.abort();
+    await assert.rejects(
+      waitForLuantiReport(dir, "one", launch, { signal: abort.signal }),
+      /canceled/,
+    );
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
 });

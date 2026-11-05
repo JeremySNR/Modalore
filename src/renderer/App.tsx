@@ -245,7 +245,11 @@ function App() {
     dialogRef.current?.focus();
     return () => previous?.focus();
   }, [confirm, review, restoreVersionId]);
-  const error = (e: unknown) => (e instanceof Error ? e.message : String(e));
+  const error = (e: unknown) =>
+    (e instanceof Error ? e.message : String(e)).replace(
+      /^Error invoking remote method 'modalore:[^']+': (?:Error: )?/,
+      "",
+    );
   const action = async <T,>(
     fn: () => Promise<T>,
     success?: string,

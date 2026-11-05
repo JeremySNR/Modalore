@@ -289,8 +289,14 @@ export async function launchLuanti(
     );
     let closed = false,
       committed = false;
-    let resolveClosed!: () => void;
-    const closedPromise = new Promise<void>((resolve) => {
+    let resolveClosed!: (exit: {
+      code: number | null;
+      signal: NodeJS.Signals | null;
+    }) => void;
+    const closedPromise = new Promise<{
+      code: number | null;
+      signal: NodeJS.Signals | null;
+    }>((resolve) => {
       resolveClosed = resolve;
     });
     const finish = () => {
@@ -301,11 +307,11 @@ export async function launchLuanti(
     // A later kill or process-management error can be emitted after the
     // initial spawn promise has settled; it must not crash the host process.
     child.on("error", () => {});
-    child.once("close", () => {
+    child.once("close", (code, signal) => {
       options.signal?.removeEventListener("abort", cancelChild);
       closed = true;
       if (committed) finish();
-      resolveClosed();
+      resolveClosed({ code, signal });
     });
     await new Promise<void>((resolve, reject) => {
       child.once("spawn", resolve);
@@ -342,6 +348,7 @@ export async function launchLuanti(
       logPath,
       reportPath,
       sessionId,
+      exited: closedPromise,
       sourceHash: hash(source),
       evidence: {
         schema: true,
@@ -365,6 +372,97 @@ export async function launchLuanti(
     await releaseLock(p, lock.token);
     throw e;
   }
+}
+
+export class LuantiStartupError extends Error {
+  constructor(
+    message: string,
+    readonly detail: string,
+  ) {
+    super(message);
+    this.name = "LuantiStartupError";
+  }
+}
+
+async function gameLogTail(root: string, id: string, logPath: string) {
+  try {
+    const profile = await profilePath(root, id);
+    const name = path.basename(logPath);
+    if (
+      !/^luanti-[a-f0-9-]{36}\.log$/.test(name) ||
+      path.resolve(logPath) !== path.resolve(profile, name)
+    )
+      return "Game log unavailable.";
+    const stat = await fs.lstat(logPath);
+    if (!stat.isFile() || stat.isSymbolicLink()) return "Game log unavailable.";
+    const file = await fs.open(logPath, "r");
+    try {
+      const size = (await file.stat()).size;
+      const bytes = Buffer.alloc(Math.min(size, 16384));
+      const result = await file.read(
+        bytes,
+        0,
+        bytes.length,
+        Math.max(0, size - bytes.length),
+      );
+      return (
+        bytes
+          .subarray(0, result.bytesRead)
+          .toString("utf8")
+          .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "") ||
+        "The game log was empty."
+      );
+    } finally {
+      await file.close();
+    }
+  } catch {
+    return "Game log unavailable.";
+  }
+}
+
+/** Wait for this exact client's report, while distinguishing a live slow start
+ * from a process that has already exited. Only main-process callers get the log. */
+export async function waitForLuantiReport(
+  root: string,
+  id: string,
+  launch: Pick<
+    Awaited<ReturnType<typeof launchLuanti>>,
+    "sessionId" | "logPath" | "exited"
+  >,
+  options: { signal?: AbortSignal; timeoutMs?: number } = {},
+) {
+  const timeout = options.timeoutMs ?? 20000;
+  if (!Number.isFinite(timeout) || timeout < 0 || timeout > 30000)
+    throw new Error("Invalid game startup timeout");
+  const deadline = Date.now() + timeout;
+  let exit: Awaited<typeof launch.exited> | undefined;
+  void launch.exited.then((result) => {
+    exit = result;
+  });
+  do {
+    checkAbort(options.signal);
+    // Allow already-completed process promises to settle before inspecting files.
+    await Promise.resolve();
+    if (exit)
+      throw new LuantiStartupError(
+        "The game closed before your player joined. Your recipe is still saved. Try Play again, or open Technical details for the game log.",
+        `Game exited (${exit.code === null ? (exit.signal ?? "unknown reason") : `code ${exit.code}`}).\n\n${await gameLogTail(root, id, launch.logPath)}`,
+      );
+    try {
+      const report = await readLuantiReport(root, id, launch.sessionId);
+      if (report) return report;
+    } catch (error) {
+      // The game writes a small JSON file; a read can overlap that write.
+      if (!(error instanceof SyntaxError)) throw error;
+    }
+    if (Date.now() >= deadline) return null;
+    await Promise.race([
+      launch.exited,
+      new Promise((resolve) =>
+        setTimeout(resolve, Math.min(250, deadline - Date.now())),
+      ),
+    ]);
+  } while (true);
 }
 
 /** Readback is evidence of an API value, not proof of physical movement. */

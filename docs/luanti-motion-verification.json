@@ -1,0 +1,51 @@
+{
+  "engine": "Luanti 5.18.0",
+  "game": "Minetest Game",
+  "method": "Two fresh isolated singlenode worlds; indestructible flat floor, initial position set once before sampling, unchanged generated Modalore runtime, built-in --random-input, server samples at approximately 0.1 seconds for 18 seconds",
+  "baseline": {
+    "requested": {
+      "gravity": 1,
+      "jump": 1,
+      "speed": 1
+    },
+    "observed": {
+      "gravity": 1,
+      "jump": 1,
+      "speed": 1
+    },
+    "samples": 179,
+    "durationSeconds": 17.92477796971798,
+    "controlledIntervals": 83,
+    "movingControlledIntervals": 83,
+    "horizontalDistance": 32.38496055606806,
+    "horizontalDistanceDuringDirectionalControl": 30.6223958779238,
+    "jumpSamples": 92,
+    "auxSamples": 83,
+    "minY": 0.5,
+    "maxY": 1.5759999752044678
+  },
+  "modified": {
+    "requested": {
+      "gravity": 0.8,
+      "jump": 1.4,
+      "speed": 1.5
+    },
+    "observed": {
+      "gravity": 0.800000011920929,
+      "jump": 1.399999976158142,
+      "speed": 1.5
+    },
+    "samples": 179,
+    "durationSeconds": 17.92380492389202,
+    "controlledIntervals": 146,
+    "movingControlledIntervals": 146,
+    "horizontalDistance": 88.09851320712548,
+    "horizontalDistanceDuringDirectionalControl": 85.93555364253251,
+    "jumpSamples": 92,
+    "auxSamples": 99,
+    "minY": 0.5,
+    "maxY": 3.13700008392334
+  },
+  "limitations": "Random control durations, simultaneous keys, camera direction and latency differ between runs. Controls are sampled at interval endpoints, so do not necessarily represent the entire preceding interval. Distance and height are descriptive, not a controlled causal comparison of the individual multipliers. Position samples demonstrate player motion with directional controls; no human input or visually observed movement is claimed.",
+  "inputSource": "https://github.com/luanti-org/luanti/blob/5.18.0/src/client/inputhandler.cpp"
+}
