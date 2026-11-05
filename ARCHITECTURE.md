@@ -27,6 +27,8 @@ The local default model/configuration is preserved. The adapter supports model d
 
 App-owned workshop storage contains project metadata, per-project immutable recipe files addressed by SHA-256, a current pointer, job workspaces, profiles and checkpoints. JSON writes use staging and rename. Game installation stages a locally built artifact, verifies its hash, and preserves prior installed files on failure. Imported recipes create fresh profiles. There is no automatic dependency upgrade or arbitrary third-party mod mix.
 
+Visible history retains up to 30 prior recipe states with their original parent hashes. Restoring a selected entry saves the outgoing state rather than truncating later history. Old rollback-only records migrate in memory with stable entry IDs and no invented dates. Metadata remains the transaction commit point; failed writes roll the profile pointer back. Archiving is a reversible metadata flag, leaves profile files intact, and rejects edits/play until unarchived. An explicit `MODALORE_DATA_DIR` also isolates Electron's cache and instance lock using [its supported path API](https://www.electronjs.org/docs/latest/api/app/), before app readiness.
+
 Checkpoints contain only profile Worlds and Players. Recipe rollback and save restore are separate operations. Restore stages the new save tree and rolls back on a failed swap; recovery journals cover interrupted save swaps and mod installation. Original Terraria saves are never enumerated/copied automatically. Persistent process locks block mutation across application restarts. A narrow crash window between child process creation and recording its PID remains; stronger operating-system coordination is a stable-release requirement.
 
 ## Execution evidence

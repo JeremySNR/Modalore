@@ -8,7 +8,7 @@ import {
   protocol,
   net,
 } from "electron";
-import { promises as fs } from "node:fs";
+import { promises as fs, mkdirSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -18,6 +18,14 @@ import { validateRecipe } from "../shared/recipe.js";
 import * as game from "./game/adapter.js";
 import type { Progress, Snapshot } from "../renderer/api.js";
 
+// Keep explicit test/custom data roots independent, including Electron's cache
+// and single-instance lock, so verification never attaches to a user's session.
+if (process.env.MODALORE_DATA_DIR) {
+  const desktopData = path.resolve(process.env.MODALORE_DATA_DIR, ".desktop");
+  mkdirSync(desktopData, { recursive: true });
+  app.setPath("userData", desktopData);
+  app.setPath("sessionData", desktopData);
+}
 protocol.registerSchemesAsPrivileged([
   {
     scheme: "modalore",
@@ -128,11 +136,15 @@ function handle(
   });
 }
 function registerHandlers() {
-  handle("snapshot", async () => ({
-    game: gameState,
-    codex: codexState,
-    projects: await store.list(),
-  }));
+  handle("snapshot", async () => {
+    const projects = await store.list();
+    return {
+      game: gameState,
+      codex: codexState,
+      projects: projects.filter((p) => !p.archivedAt),
+      archivedProjects: projects.filter((p) => p.archivedAt),
+    };
+  });
   handle("detectGame", detect);
   handle("pickGame", async () => {
     const selected = await dialog.showOpenDialog(window, {
@@ -198,6 +210,13 @@ function registerHandlers() {
     true,
   );
   handle(
+    "restoreVersion",
+    (id: string, versionId: string) => store.restoreVersion(id, versionId),
+    true,
+  );
+  handle("archiveProject", (id: string) => store.archive(id), true);
+  handle("unarchiveProject", (id: string) => store.unarchive(id), true);
+  handle(
     "remix",
     async (id: string, request: unknown) => {
       if (
@@ -206,7 +225,7 @@ function registerHandlers() {
         request.length > 4000
       )
         throw new Error("Describe your change in 1–4,000 characters.");
-      const project = await store.read(id);
+      const project = await store.readActive(id);
       if (!(await codex.getStatus()).signedIn)
         throw new Error(
           "Connect your Codex account in Setup before using AI creation.",
@@ -337,7 +356,7 @@ function registerHandlers() {
     active?.abort();
   });
   handle("exportProject", async (id: string) => {
-    const project = await store.read(id);
+    const project = await store.readActive(id);
     const selected = await dialog.showSaveDialog(window, {
       title: "Export this exact recipe version",
       defaultPath: `${project.name.replace(/[^a-zA-Z0-9 -]/g, "").slice(0, 60) || "creation"}.modalore.json`,
@@ -371,15 +390,15 @@ function registerHandlers() {
       const pkg = game.importPackage(
         await fs.readFile(selected.filePaths[0], "utf8"),
       );
-    // Import preserves the exact immutable package. Only a later remix creates new ancestry.
-    return store.create(pkg.recipe, pkg.parentHash ?? undefined);
+      // Import preserves the exact immutable package. Only a later remix creates new ancestry.
+      return store.create(pkg.recipe, pkg.parentHash ?? undefined);
     },
     true,
   );
   handle(
     "play",
     async (id: string) => {
-      const project = await store.read(id);
+      const project = await store.readActive(id);
       if (!gameState?.found || !gameState.path)
         throw new Error("Open Setup and locate tModLoader before playing.");
       const consent = await dialog.showMessageBox(window, {
@@ -455,7 +474,7 @@ function registerHandlers() {
   handle(
     "restore",
     async (id: string) => {
-      const project = await store.read(id);
+      const project = await store.readActive(id);
       const answer = await dialog.showMessageBox(window, {
         type: "question",
         title: "Restore a previous version",

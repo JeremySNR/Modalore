@@ -1,6 +1,6 @@
 # Verification record
 
-Checked on Windows x64, 4 November 2026. This record separates real integrations, simulated tests, and work that requires the game.
+Checked on Windows x64, 4–5 November 2026. This record separates real integrations, simulated tests, and work that requires the game.
 
 | Area | Evidence | Limit |
 | --- | --- | --- |
@@ -18,6 +18,8 @@ Checked on Windows x64, 4 November 2026. This record separates real integrations
 `npm run check` runs type checking, the integration tests and a production build. `npm run test:ui` serves the app and runs browser interactions/accessibility checks. `node scripts/smoke-desktop.mjs` launches real Electron. `npx tsx scripts/probe-codex.ts` is an optional real-account probe; it uses allowance and confines its artifacts to `.local`.
 
 The release-candidate local unrestricted run passed all 23 Node tests, including the symlink case, plus all three served UI tests. Restricted Windows runs can skip link creation because the development sandbox denies it. CI and subsequent additions are visible in [GitHub Actions](https://github.com/JeremySNR/Modalore/actions).
+
+The subsequent history/archive work on main passes all 26 Node tests and three served UI tests. The real Electron smoke test restores an older recipe through the UI, confirms the newer one remains in history, archives it, reloads the app and unarchives it. Legacy migration, cross-project version rejection, failed metadata commits and unchanged save bytes have filesystem coverage. The expanded history and archive views pass axe A/AA checks and fit a 390px viewport; Electron uses axe's single-page mode because it cannot create the extra analysis tab. These checks do not establish game behavior. See [history screenshot](desktop-history.png).
 
 ## Performance
 

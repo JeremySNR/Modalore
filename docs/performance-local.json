@@ -1,34 +1,34 @@
 {
-  "checkedAt": "2026-11-04T21:54:42.304Z",
+  "checkedAt": "2026-11-05T07:54:36.183Z",
   "platform": "win32",
-  "packaged": true,
-  "readyMs": 257,
+  "packaged": false,
+  "readyMs": 221,
   "navigationAutomationRoundtripMs": [
-    63,
+    88,
     23,
     17,
-    16,
-    17
+    17,
+    16
   ],
   "processes": [
     {
       "type": "Browser",
-      "workingSetKB": 109916,
+      "workingSetKB": 114652,
       "cpu": 0
     },
     {
       "type": "GPU",
-      "workingSetKB": 111500,
+      "workingSetKB": 122088,
       "cpu": 0
     },
     {
       "type": "Utility",
-      "workingSetKB": 48120,
+      "workingSetKB": 49404,
       "cpu": 0
     },
     {
       "type": "Tab",
-      "workingSetKB": 102952,
+      "workingSetKB": 161428,
       "cpu": 0
     }
   ],
@@ -40,7 +40,11 @@
     "update project",
     "persisted snapshot",
     "real export/import into new profile with test-selected dialog paths",
-    "library navigation"
+    "library navigation",
+    "select and restore earlier recipe through UI, keeping newer version",
+    "history keyboard focus and A/AA accessibility",
+    "archive, reload, unarchive through real IPC and persisted store",
+    "history and archived library fit 390px window"
   ],
   "disclaimer": "One local launch, not a controlled cold-start benchmark. Navigation includes automation overhead."
 }

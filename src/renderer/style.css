@@ -1493,3 +1493,96 @@ h3 {
   padding: 11px 12px;
   border-radius: 2px;
 }
+.library-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+  margin: 0 0 20px;
+}
+.library-tabs button {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #aaa99e;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.library-tabs button.active {
+  color: #eeeae0;
+  border-bottom-color: #d5a15a;
+}
+.library-entry .project-row {
+  width: 100%;
+}
+.archived-row {
+  cursor: default;
+}
+.history-panel {
+  border: 1px solid #414137;
+  padding: 25px;
+  margin-top: 16px;
+}
+.history-panel summary {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.history-panel summary span {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.history-panel summary:focus-visible,
+.history-list:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 5px;
+}
+.history-panel > p {
+  color: #aaa99e;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.history-list {
+  margin-top: 18px;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.history-row > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.history-row strong {
+  font-size: 13px;
+}
+.history-row span {
+  color: #aaa99e;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.history-row .history-name {
+  color: #eeeae0;
+}
+.history-row .text-link {
+  flex-shrink: 0;
+}
+@media (max-width: 430px) {
+  .archived-row {
+    flex-wrap: wrap;
+  }
+  .history-panel {
+    padding: 18px;
+  }
+}

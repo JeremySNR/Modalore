@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Browse up to 30 earlier recipes, compare their values, and restore one while retaining the outgoing version and its attribution.
+- Archive projects without deleting their saves or history; bring them back from the Archived library view.
+- Validate legacy history and project hashes before changing a profile. Recover the committed version if a history restore cannot save metadata.
+- Isolate Electron cache and instance locks when using an explicit test data directory.
+- Exercise version restoration, archive/reopen recovery, keyboard focus and narrow-window accessibility through the real desktop bridge.
+
 ## 0.1.0-alpha.1 — 2026-11-05
 
 First Windows preview.

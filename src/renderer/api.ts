@@ -6,11 +6,19 @@ export type Project = {
   recipe: Recipe;
   updatedAt?: string;
   status?: string;
+  archivedAt?: string;
+  history?: Array<{
+    id: string;
+    recipe: Recipe;
+    parentHash?: string;
+    savedAt?: string;
+  }>;
 };
 export type Snapshot = {
   game?: { found: boolean; path?: string; message?: string };
   codex?: { available: boolean; signedIn?: boolean; message?: string };
   projects?: Project[];
+  archivedProjects?: Project[];
 };
 export type Progress = {
   stage: string;
@@ -30,6 +38,9 @@ export interface ModaloreAPI {
   exportProject(projectId: string): Promise<{ message?: string } | void>;
   importProject(): Promise<Project | null>;
   play(projectId: string): Promise<{ message?: string } | void>;
+  restoreVersion(projectId: string, versionId: string): Promise<Project>;
+  archiveProject(projectId: string): Promise<Project>;
+  unarchiveProject(projectId: string): Promise<Project>;
   restore(projectId: string): Promise<{ message?: string } | void>;
   onProgress(callback: (event: Progress) => void): () => void;
   openExternal(key: "codex" | "tmodloader"): Promise<void>;

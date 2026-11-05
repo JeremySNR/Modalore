@@ -34,6 +34,10 @@ Play asks for confirmation because actual game compatibility has not been verifi
 
 ## Recover
 
+Open a saved project and expand **Version history** to see its current values and up to 30 earlier recipes. Choose **Restore** beside a version, review its name and values, and confirm. This replaces unsaved adjustments, keeps the outgoing saved recipe in history and preserves game saves. Export important versions before they age out of this recent-history view.
+
+**Archive project** removes a project from the Active library without deleting files, versions or saves. Open **My library → Archived → Unarchive** to bring it back. Archiving does not stop a running game or reclaim disk space.
+
 Close the game before changing or restoring a profile. **Recovery options → Revert recipe** restores the prior saved values and keeps save progress. **Restore save checkpoint** replaces this profile’s Worlds and Players with its checkpoint and can discard later progress. The app asks again before this destructive restore. It does not restore your original Terraria save folder.
 
 Profiles live under `%APPDATA%/Modalore/workshop` in downloaded builds. Development builds may use `%APPDATA%/modalore/workshop`. Keep this folder when uninstalling if you want to retain projects. The application currently has no automatic update mechanism: install a newer preview deliberately and keep an export of important recipes.

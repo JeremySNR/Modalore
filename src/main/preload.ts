@@ -14,6 +14,10 @@ const api: ModaloreAPI = {
   exportProject: (id) => ipcRenderer.invoke("modalore:exportProject", id),
   importProject: () => ipcRenderer.invoke("modalore:importProject"),
   play: (id) => ipcRenderer.invoke("modalore:play", id),
+  restoreVersion: (id, versionId) =>
+    ipcRenderer.invoke("modalore:restoreVersion", id, versionId),
+  archiveProject: (id) => ipcRenderer.invoke("modalore:archiveProject", id),
+  unarchiveProject: (id) => ipcRenderer.invoke("modalore:unarchiveProject", id),
   restore: (id) => ipcRenderer.invoke("modalore:restore", id),
   openExternal: (key) => ipcRenderer.invoke("modalore:openExternal", key),
   onProgress: (callback) => {

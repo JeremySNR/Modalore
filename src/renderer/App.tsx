@@ -169,6 +169,10 @@ function App() {
   const [details, setDetails] = useState(false);
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [libraryView, setLibraryView] = useState<"active" | "archived">(
+    "active",
+  );
+  const [restoreVersionId, setRestoreVersionId] = useState<string | null>(null);
   const [review, setReview] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const native = !!window.modalore;
@@ -186,11 +190,11 @@ function App() {
     return window.modalore?.onProgress?.(setProgress);
   }, []);
   useEffect(() => {
-    if (!confirm && !review) return;
+    if (!confirm && !review && !restoreVersionId) return;
     const previous = document.activeElement as HTMLElement | null;
     dialogRef.current?.focus();
     return () => previous?.focus();
-  }, [confirm, review]);
+  }, [confirm, review, restoreVersionId]);
   const error = (e: unknown) => (e instanceof Error ? e.message : String(e));
   const action = async <T,>(
     fn: () => Promise<T>,
@@ -303,6 +307,40 @@ function App() {
       }
     }
   };
+  const archive = async (p: Project, archived: boolean) => {
+    if (!window.modalore) return unavailable();
+    const result = await action(() =>
+      archived
+        ? window.modalore!.unarchiveProject(p.id)
+        : window.modalore!.archiveProject(p.id),
+    );
+    if (result) {
+      setNotice(
+        archived
+          ? "Project returned to your library."
+          : "Project archived. Find it in Archived to bring it back.",
+      );
+      if (!archived) {
+        setProject(null);
+        setLibraryView("archived");
+        setPage("library");
+      }
+    }
+  };
+  const restoreVersion = async () => {
+    if (!window.modalore || !project || !restoreVersionId) return;
+    const result = await action(() =>
+      window.modalore!.restoreVersion(project.id, restoreVersionId),
+    );
+    if (result) {
+      setProject(result);
+      setDraft((d) => ({ ...d, ...result.recipe }));
+      setNotice(
+        "Version restored. Your other versions and saves are still available.",
+      );
+    }
+    setRestoreVersionId(null);
+  };
   const nav = (p: Page) => {
     setProgress(null);
     setPage(p);
@@ -316,6 +354,9 @@ function App() {
     setSelected({ ...samples[0], ...p.recipe });
     setPage("studio");
   };
+  const restoringVersion = project?.history?.find(
+    (v) => v.id === restoreVersionId,
+  );
   return (
     <div className="shell">
       <aside className={`sidebar ${menu ? "open" : ""}`}>
@@ -659,24 +700,67 @@ function App() {
                 <Upload size={17} /> Import project
               </button>
             </div>
-            {snapshot.projects?.length ? (
+            <div className="library-tabs" aria-label="Library view">
+              <button
+                className={libraryView === "active" ? "active" : ""}
+                aria-pressed={libraryView === "active"}
+                onClick={() => setLibraryView("active")}
+              >
+                Active ({snapshot.projects?.length || 0})
+              </button>
+              <button
+                className={libraryView === "archived" ? "active" : ""}
+                aria-pressed={libraryView === "archived"}
+                onClick={() => setLibraryView("archived")}
+              >
+                Archived ({snapshot.archivedProjects?.length || 0})
+              </button>
+            </div>
+            {(libraryView === "active"
+              ? snapshot.projects
+              : snapshot.archivedProjects
+            )?.length ? (
               <div className="project-list">
-                {snapshot.projects.map((p) => (
-                  <button
-                    key={p.id}
-                    className="project-row"
-                    onClick={() => showProject(p)}
-                  >
-                    <div className="project-thumb">
-                      <Art theme={"grove"} />
-                    </div>
-                    <div>
-                      <span className="eyebrow">Project</span>
-                      <h3>{p.name}</h3>
-                      <p>{p.status || "Open project"}</p>
-                    </div>
-                    <ArrowUpRight size={20} />
-                  </button>
+                {(libraryView === "active"
+                  ? snapshot.projects
+                  : snapshot.archivedProjects
+                )?.map((p) => (
+                  <div className="library-entry" key={p.id}>
+                    {libraryView === "active" ? (
+                      <button
+                        className="project-row"
+                        onClick={() => showProject(p)}
+                      >
+                        <div className="project-thumb">
+                          <Art theme="grove" />
+                        </div>
+                        <div>
+                          <span className="eyebrow">Project</span>
+                          <h3>{p.name}</h3>
+                          <p>{p.status || "Open project"}</p>
+                        </div>
+                        <ArrowUpRight size={20} />
+                      </button>
+                    ) : (
+                      <div className="project-row archived-row">
+                        <div className="project-thumb">
+                          <Art theme="grove" />
+                        </div>
+                        <div>
+                          <span className="eyebrow">Archived project</span>
+                          <h3>{p.name}</h3>
+                          <p>Unarchive to edit</p>
+                        </div>
+                        <button
+                          className="button secondary"
+                          disabled={busy}
+                          onClick={() => void archive(p, true)}
+                        >
+                          Unarchive
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -684,17 +768,24 @@ function App() {
                 <div className="empty-icon">
                   <Library size={26} />
                 </div>
-                <h2>Your library is empty</h2>
+                <h2>
+                  {libraryView === "active"
+                    ? "Your library is empty"
+                    : "No archived projects"}
+                </h2>
                 <p>
-                  When you make an idea your own, you’ll find it here. Start
-                  with a sample or import a project.
+                  {libraryView === "active"
+                    ? "When you make an idea your own, you'll find it here. Start with a sample or import a project."
+                    : "Projects you archive will appear here, ready to bring back."}
                 </p>
-                <button
-                  className="button primary"
-                  onClick={() => nav("discover")}
-                >
-                  Explore ideas <ArrowRight size={17} />
-                </button>
+                {libraryView === "active" && (
+                  <button
+                    className="button primary"
+                    onClick={() => nav("discover")}
+                  >
+                    Explore ideas <ArrowRight size={17} />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -901,6 +992,74 @@ function App() {
                   </div>
                 )}
                 {project && (
+                  <details className="history-panel">
+                    <summary>
+                      Version history{" "}
+                      <span>{(project.history?.length || 0) + 1} saved</span>
+                    </summary>
+                    <p>
+                      Keeps up to 30 earlier recipes. Restoring keeps the
+                      current recipe in this history and leaves game saves
+                      unchanged. Unsaved adjustments will be replaced.
+                    </p>
+                    <div
+                      className="history-list"
+                      role="region"
+                      aria-label="Saved recipe versions"
+                      tabIndex={0}
+                    >
+                      {[
+                        {
+                          id: "current",
+                          recipe: project.recipe,
+                          savedAt: project.updatedAt,
+                        },
+                        ...(project.history || []).slice().reverse(),
+                      ].map((version, index) => (
+                        <div className="history-row" key={version.id}>
+                          <div>
+                            <strong>
+                              {index === 0
+                                ? "Current version"
+                                : `Earlier version ${project.history!.length - index + 1}`}
+                            </strong>
+                            <span className="history-name">
+                              {version.recipe.title}
+                            </span>
+                            {version.savedAt &&
+                              !Number.isNaN(Date.parse(version.savedAt)) && (
+                                <span>
+                                  {new Date(version.savedAt).toLocaleString()}
+                                </span>
+                              )}
+                            <span>
+                              Health{" "}
+                              {Math.round(
+                                version.recipe.enemyHealthMultiplier * 100,
+                              )}
+                              % · Damage{" "}
+                              {Math.round(
+                                version.recipe.damageMultiplier * 100,
+                              )}
+                              % · Coins{" "}
+                              {Math.round(version.recipe.coinMultiplier * 100)}%
+                            </span>
+                          </div>
+                          {index > 0 && (
+                            <button
+                              className="text-link"
+                              disabled={busy}
+                              onClick={() => setRestoreVersionId(version.id)}
+                            >
+                              Restore
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+                {project && (
                   <div className="project-actions">
                     <span className="eyebrow">Project</span>
                     <button
@@ -919,6 +1078,18 @@ function App() {
                     </button>
                     <button
                       className="text-link"
+                      disabled={busy}
+                      onClick={() => void archive(project, false)}
+                    >
+                      Archive project
+                    </button>
+                    <p className="small-hint">
+                      Archive hides this project from your library. Its
+                      versions, saves and files remain available.
+                    </p>
+                    <button
+                      className="text-link"
+                      disabled={busy}
                       onClick={() => setConfirm(true)}
                     >
                       <RotateCcw size={15} /> Recovery options
@@ -1065,6 +1236,87 @@ function App() {
           </div>
         )}
       </main>
+      {restoreVersionId && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setRestoreVersionId(null);
+          }}
+        >
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="version-restore-title"
+            tabIndex={-1}
+            ref={dialogRef}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setRestoreVersionId(null);
+              if (e.key === "Tab") {
+                const items = Array.from(
+                  e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    "button:not(:disabled)",
+                  ),
+                );
+                const i = items.indexOf(
+                  document.activeElement as HTMLButtonElement,
+                );
+                if (e.shiftKey && i <= 0) {
+                  e.preventDefault();
+                  items[items.length - 1]?.focus();
+                } else if (!e.shiftKey && i === items.length - 1) {
+                  e.preventDefault();
+                  items[0]?.focus();
+                }
+              }
+            }}
+          >
+            <button
+              className="icon-button modal-close"
+              aria-label="Close"
+              onClick={() => setRestoreVersionId(null)}
+            >
+              <X size={20} />
+            </button>
+            <span className="eyebrow">Project history</span>
+            <h2 id="version-restore-title">Restore this version?</h2>
+            {restoringVersion && (
+              <p>
+                <strong>{restoringVersion.recipe.title}</strong>
+                <br />
+                Health{" "}
+                {Math.round(
+                  restoringVersion.recipe.enemyHealthMultiplier * 100,
+                )}
+                % · Damage{" "}
+                {Math.round(restoringVersion.recipe.damageMultiplier * 100)}% ·
+                Coins {Math.round(restoringVersion.recipe.coinMultiplier * 100)}
+                %
+              </p>
+            )}
+            <p>
+              This replaces the current recipe and any unsaved adjustments.
+              Newer versions and game saves remain available.
+            </p>
+            <div className="button-row">
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setRestoreVersionId(null)}
+              >
+                Go back
+              </button>
+              <button
+                className="button primary"
+                disabled={busy}
+                onClick={() => void restoreVersion()}
+              >
+                Restore version
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {review && (
         <div
           className="modal-backdrop"
