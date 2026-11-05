@@ -1,4 +1,4 @@
-# Installed-game research, 5 November 2026
+# Game-candidate research, 5 November 2026
 
 This is a feasibility comparison based on official publisher and developer documentation. Steam manifests are detection hints, not proof of ownership, installation integrity or launch readiness. Nothing was installed or launched for this investigation.
 
@@ -9,6 +9,8 @@ The developer's [official announcement](https://store.steampowered.com/news/post
 The developer documents maps created in-game as JSON packed into scenarios; that does **not** establish a supported external writing contract, that Modalore can generate valid playable scenarios, import them automatically, isolate a save, or produce an immutable share release. The official deep link can open a named existing scenario; it does not establish direct loading of a locally generated one. Version behavior and scenario ownership/content rights need verification before attempting automated authoring or sharing. The game has leaderboards and anti-cheat, so stay inside its documented editor and do not inject code or manipulate scores.
 
 The next small verification is an original scenario made through the built-in editor, comparing its saved output and testing a new copy through the game and a fresh profile. Until then, a recipe for target health/speed or other scenario parameters is a proposal, not a verified playable change. Existing Modalore recipes, profile isolation and package format are Terraria-specific: a distinct game-specific recipe and adapter would be required; do not relabel those controls as KovaaK's support. A simple list/launch existing scenario can use documented deep-link design, but is not a complete make-and-share journey.
+
+Follow-up: the publisher's [scenario creation guide](https://wiki.kovaaks.com/home/KovaaK%27s/ScenarioCreation) documents editing and testing through the game, and its [historical release notes](https://store.steampowered.com/news/posts/?appids=824270&enddate=1575602051&feed=steam_community_announcements) mention exported `.sce` files. A local developer example is line-oriented text with a `Timelimit` entry, but no authoritative external `.sce` schema, supported external write API, or documented recipe-to-scenario import contract was found. An **officially supported automated recipe-to-playable-scenario generation contract remains unverified**. A smallest credible experiment is changing a scenario's time limit in the built-in editor and testing it there; translating that into safe automated external file editing and sharing is a separate, unverified step. Preserve user-created content and respect the rights of the original scenario author.
 
 ## Cyberpunk 2077
 
