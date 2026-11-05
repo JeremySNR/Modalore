@@ -1,4 +1,4 @@
-Modalore alpha.2 adds a free first game, version history and reversible project archiving.
+Modalore alpha.3 improves game startup recovery. If the game closes before your player joins, Modalore now explains what happened, offers the game log under Technical details and keeps your recipe ready to retry.
 
 Download **Setup.exe** for an installer or **Portable.exe** to try without installing. Windows x64 only. These preview builds are unsigned; `SHA256SUMS.txt` records the exact download hashes.
 
@@ -13,10 +13,10 @@ Sliders, playing and file sharing do not require an AI account. Natural-language
 
 ### What was checked
 
-Real Codex recipe creation/revision, real Luanti client/player-settings readback, native setup/download/Play, exact export/re-import, a fresh imported world, checkpoint restoration after game writes, cancellation and version recovery. Luanti 5.18.0 and a pinned Minetest Game revision are used. Local tests and CI results are documented in the repository.
+Real Codex recipe creation/revision, real Luanti client/player-settings readback, native setup/download/Play, exact export/re-import, a fresh imported world, checkpoint restoration after game writes, cancellation and version recovery. New checks cover revising and replaying the same world, restoring its exact earlier database, a deliberate real-engine startup failure and successful retry. All 38 integration tests and five browser UI/accessibility tests pass. Luanti 5.18.0 and a pinned Minetest Game revision are used.
 
 ### Preview limits
 
-Player-settings readback is separate from visually observed movement. Game-window screenshot inspection timed out waiting for Computer Use approval, so gameplay footage and physical movement acceptance are still outstanding. Clean-PC onboarding and installer/uninstaller tests remain incomplete. Terraria/tModLoader remains experimental and unverified; it is not required for the free-game path. Concept illustrations are not game footage. No hosted sharing, multiplayer, arbitrary mod code or automatic updates.
+An isolated probe recorded real movement using the engine's random input. Different inputs prevent a controlled comparison of individual physics multipliers. Human playtesting, gameplay footage, clean-PC onboarding and installer/uninstaller tests remain incomplete. Terraria/tModLoader remains experimental and unverified; it is not required for the free-game path. Concept illustrations are not game footage. No hosted sharing, multiplayer, arbitrary mod code or automatic updates.
 
 Keep important recipes exported and use the app-owned worlds. [Getting started](https://github.com/JeremySNR/Modalore/blob/main/docs/GETTING_STARTED.md) · [Verification](https://github.com/JeremySNR/Modalore/blob/main/docs/VERIFICATION.md)

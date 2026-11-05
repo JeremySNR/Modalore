@@ -1,22 +1,26 @@
 {
-  "checkedAt": "2026-11-05T16:41:42.654Z",
+  "checkedAt": "2026-11-05T17:17:49.287Z",
   "platform": "win32",
   "packaged": true,
   "engine": "5.18.0",
   "gameCommit": "9e895af6e9feb98332fa1a778001442f5669bc20",
   "checks": [
-    "official engine and pinned game downloaded and hash-verified through desktop setup",
+    "existing pinned runtime selected through the native folder picker",
     "created recipe and launched from native UI",
     "real connected player physics matched requested settings",
+    "edited speed after playing and relaunched the same world with a fresh matching report",
+    "world-generation metadata preserved across recipe revision",
     "export/import/re-export byte-identical in a fresh profile",
     "fresh imported world launched with identical player physics",
     "original test world database unchanged by imported-world play",
-    "checkpoint restore removed game-written world database as expected"
+    "checkpoint restore returned the exact pre-revision world database",
+    "actual engine startup error surfaced in UI with bounded game log and no internal IPC prefix",
+    "failed launch kept the recipe and released the profile for a successful retry"
   ],
   "observed": {
     "gravity": 1,
     "jump": 1,
-    "speed": 1.5
+    "speed": 2
   },
-  "limits": "Physics API readback and filesystem recovery were checked. Physical movement and a human playing the game were not observed. Two test-only mods shut down each isolated session after 10 seconds. Native export/import and destructive recovery dialogs use test-selected answers."
+  "limits": "Physics API readback and filesystem recovery were checked. Physical movement and a human playing the game were not observed in this desktop test. Test-only mods closed successful sessions after 10 seconds each and deliberately failed one startup. Native export/import and destructive recovery dialogs use test-selected answers."
 }

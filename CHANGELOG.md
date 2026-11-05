@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.3 — 2026-11-05
+
+- Detect a game that exits before its player joins and show a readable recovery message immediately, with a bounded game log in Technical details.
+- Keep the saved recipe usable after a failed launch and allow retrying the same profile.
+- Remove Electron's internal invocation prefix from user-facing errors.
+- Verify same-world recipe revision, exact pre-revision checkpoint recovery, real engine startup failure and successful retry through the desktop UI.
+- Record actual player movement in a separate isolated engine probe. Random input is descriptive evidence, not controlled measurement of each multiplier or human playtesting.
+
 ## 0.1.0-alpha.2 — 2026-11-05
 
 - A free first game: one-click, checksum-verified portable Luanti 5.18.0 and pinned Minetest Game setup.
