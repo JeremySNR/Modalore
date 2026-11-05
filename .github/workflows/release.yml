@@ -34,4 +34,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create "$env:GITHUB_REF_NAME" release/*.exe release/SHA256SUMS.txt --draft --prerelease --title "Modalore $env:GITHUB_REF_NAME — Windows preview" --notes-file docs/RELEASE_NOTES.md
+        run: |
+          $assets = (Get-ChildItem -LiteralPath release -Filter *.exe).FullName
+          gh release create "$env:GITHUB_REF_NAME" @assets release/SHA256SUMS.txt --draft --prerelease --title "Modalore $env:GITHUB_REF_NAME — Windows preview" --notes-file docs/RELEASE_NOTES.md

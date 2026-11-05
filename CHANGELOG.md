@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-alpha.1 — 2026-11-04
+## 0.1.0-alpha.1 — 2026-11-05
 
 First Windows preview.
 
