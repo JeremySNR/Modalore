@@ -1,8 +1,8 @@
 <p align="center"><img src="docs/banner.svg" alt="Modalore — Your games. Your rules." width="100%"></p>
 
 <p align="center">
-  <a href="https://github.com/JeremySNR/Modalore/releases/download/v0.1.0-alpha.1/Modalore-0.1.0-alpha.1-Windows-x64-Setup.exe"><strong>Windows installer</strong></a> ·
-  <a href="https://github.com/JeremySNR/Modalore/releases/download/v0.1.0-alpha.1/Modalore-0.1.0-alpha.1-Windows-x64-Portable.exe">Portable download</a> ·
+  <a href="https://github.com/JeremySNR/Modalore/releases/download/v0.1.0-alpha.2/Modalore-0.1.0-alpha.2-Windows-x64-Setup.exe"><strong>Windows installer</strong></a> ·
+  <a href="https://github.com/JeremySNR/Modalore/releases/download/v0.1.0-alpha.2/Modalore-0.1.0-alpha.2-Windows-x64-Portable.exe">Portable download</a> ·
   <a href="docs/GETTING_STARTED.md">Getting started</a> ·
   <a href="docs/VERIFICATION.md">What actually works</a> ·
   <a href="https://github.com/JeremySNR/Modalore/issues">Feedback</a>
@@ -10,7 +10,7 @@
 
 [![Checks](https://github.com/JeremySNR/Modalore/actions/workflows/check.yml/badge.svg)](https://github.com/JeremySNR/Modalore/actions/workflows/check.yml) [![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-[0.1.0-alpha.1 release notes and checksums](https://github.com/JeremySNR/Modalore/releases/tag/v0.1.0-alpha.1). Unsigned Windows x64 preview.
+[0.1.0-alpha.2 release notes and checksums](https://github.com/JeremySNR/Modalore/releases/tag/v0.1.0-alpha.2). Unsigned Windows x64 preview.
 
 **Modalore is a desktop app for changing the way a game plays.** Run faster, jump higher, or try lighter gravity. Start with a recipe, adjust a slider, or ask your own Codex CLI to make a change. Send the exact recipe to a friend.
 
