@@ -5,17 +5,20 @@ Checked on Windows x64, 4–5 November 2026. This record separates real integrat
 | Area | Evidence | Limit |
 | --- | --- | --- |
 | Local Codex | Installed `0.166.0-alpha.6`: actual account read, model discovery, progress, approved artifact creation, follow-up revision, cancellation. An isolated npm install of stable `0.166.0` also passed native executable resolution, initialization and account read. | No claim of broad version support or enforced sandbox isolation; stable version has connection evidence, not the full creation probe |
-| Real recipe journey | Codex created current-schema recipe, revised coins, validated and saved it, exported/imported into a second clean profile; interrupted follow-up retained saved versions | No game process involved; consumes the configured account allowance |
+| Real Codex → game journey | Codex created a Luanti recipe, revised jump/gravity, saved it, launched a native client with matching player physics, exported/imported into a clean profile and launched again; interrupted follow-up retained versions | Consumes the configured account allowance. Engine API readback is not visual movement evidence; [sanitized result](luanti-verification.json) |
+| Free game setup and Play | Native desktop downloaded both official archives, verified hashes, created and launched a recipe, then imported and played a fresh world. Original test-world DB unchanged by the imported session | Windows development machine. Test-only shutdown helpers closed sessions after 10 seconds. [Desktop evidence](luanti-desktop-verification.json) |
 | Desktop | Actual Electron preload, isolated renderer, project create/update, persistence and library navigation exercised in development and the packaged Windows executable. Native export/import and byte-identical re-export passed. | Local machine, not a fresh Windows installation |
-| Import and recovery | Automated tests cover hash/field rejection, clean profiles, invalid updates, recipe rollback, save checkpoint restore, journal recovery and linked-directory rejection | Filesystem and simulated process tests; not in-game save validation |
+| Import and recovery | Automated tests cover hash/field rejection, game schema separation, invalid updates, rollback, journals, unsafe archives and links. Real Luanti-written world database was removed by restoring its pre-session checkpoint | Real Luanti filesystem recovery; no Terraria save validation or physical power-loss test |
 | Codex protocol failures | Fake protocol peer exercises approvals, wrong-thread requests, lost connections, retry, errors, limit codes and interruption | A simulated peer cannot prove every current/future server variant |
-| Runtime build and launch | Fixed original C# template and actual tModLoader process adapter implemented; simulated child tests verify output/hash gating, lock, launch failure rollback and cancellation | Neither Terraria nor tModLoader was installed. C# compilation, game launch, compatibility and gameplay are unverified |
+| Terraria runtime | Fixed original C# template and tModLoader process adapter; simulated child tests cover build/hash gating, locks and rollback | Neither Terraria nor tModLoader is installed. C# compilation and actual game behavior remain unverified |
 | Visual UI | Actual renderer screenshots at 1440px and 390px; native desktop screenshot; wide/narrow interactions and axe A/AA checks | Automated accessibility checks are not full screen-reader or novice user research |
 | Dependencies | npm audit reports zero known vulnerabilities after patched build dependencies | Audits are not a security certification |
 
 ## Reproduce
 
 `npm run check` runs type checking, the integration tests and a production build. `npm run test:ui` serves the app and runs browser interactions/accessibility checks. `node scripts/smoke-desktop.mjs` launches real Electron. `npx tsx scripts/probe-codex.ts` is an optional real-account probe; it uses allowance and confines its artifacts to `.local`.
+
+`node scripts/smoke-luanti.mjs` downloads the free game and tests actual native Play/sharing/recovery. `npx tsx scripts/probe-luanti.ts <runtime-folder>` uses real Codex allowance and real Luanti clients. Both keep project data in `.local`; the desktop game probe uses test-selected dialog paths and recovery answers. Real game loopback testing required execution outside the development sandbox. No firewall or system-security settings were changed.
 
 The release-candidate local unrestricted run passed all 23 Node tests, including the symlink case, plus all three served UI tests. Restricted Windows runs can skip link creation because the development sandbox denies it. CI and subsequent additions are visible in [GitHub Actions](https://github.com/JeremySNR/Modalore/actions).
 
@@ -31,10 +34,10 @@ System fonts and local SVG assets avoid download delays. Browsing does not start
 
 ## Stable-release blockers
 
-1. Build the runtime against a pinned tModLoader release, launch, and observe every supported mechanic in a new single-player world.
-2. Verify original saves remain untouched and test recovery after actual game writes. Test sharing across two real installations.
+1. Observe and measure Luanti movement/jumps, test a longer play session and capture real gameplay media. The corrected visible launch exposed a Luanti single-player window; Computer Use screenshot inspection timed out waiting for app approval.
+2. Test sharing on two separate PCs and novice first-run use. Current sharing evidence uses two clean local profiles. Terraria requires its own build/gameplay validation before being promoted beyond experimental status.
 3. Validate supported stable Codex versions and clean-machine Windows sign-in/sandbox setup. The observed file approval requested an unsandboxed retry; we explicitly approved the named test patch only.
 4. Test installer/uninstaller on a fresh PC and sign Windows binaries. Preview binaries are unsigned.
 5. Strengthen the narrow child-spawn/process-lock crash interval, test real power loss and locked-file failure modes, and add explicit user-selected save copying.
 
-There is no live publishing backend, gameplay video, stable game compatibility badge, arbitrary mod execution or multiplayer support. The enemy-army demonstration remains a future mechanic. The current release should be presented as an experimental recipe studio, not as a verified playable mod catalogue.
+There is no live publishing backend, gameplay video, broad game compatibility badge, arbitrary mod execution or multiplayer support. The enemy-army demonstration remains a future mechanic. Present this as a Windows preview with a narrow, locally exercised free-game path and a separate experimental Terraria adapter.

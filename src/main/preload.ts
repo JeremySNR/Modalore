@@ -2,6 +2,9 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { ModaloreAPI, Progress } from "../renderer/api.js";
 const api: ModaloreAPI = {
   snapshot: () => ipcRenderer.invoke("modalore:snapshot"),
+  setupLuanti: () => ipcRenderer.invoke("modalore:setupLuanti"),
+  detectLuanti: () => ipcRenderer.invoke("modalore:detectLuanti"),
+  pickLuanti: () => ipcRenderer.invoke("modalore:pickLuanti"),
   detectGame: () => ipcRenderer.invoke("modalore:detectGame"),
   pickGame: () => ipcRenderer.invoke("modalore:pickGame"),
   connectCodex: () => ipcRenderer.invoke("modalore:connectCodex"),

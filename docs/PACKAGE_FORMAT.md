@@ -1,10 +1,10 @@
-# Recipe package, version 1
+# Recipe packages, versions 1 and 2
 
 A `.modalore.json` file is UTF-8 JSON, at most 64 KiB. It has exactly `format`, `version`, `recipe`, `dependencies`, `supportedVersions`, `parentHash`, `evidence`, and `hash`. No unknown fields, archive paths or executable attachments are accepted.
 
-The recipe has exactly `schemaVersion: 1`, `title`, `description`, `damageMultiplier`, `enemyHealthMultiplier`, and `coinMultiplier`. Titles are 1–80 characters; descriptions are at most 500 characters; control characters are rejected. Multipliers are finite numbers from 0.5 through 3.
+Version 1 retains the Terraria recipe with exactly `schemaVersion: 1`, `title`, `description`, `damageMultiplier`, `enemyHealthMultiplier`, and `coinMultiplier`. Version 2 uses exactly `schemaVersion: 2`, `game: "luanti-minetest-game"`, `title`, `description`, `speedMultiplier`, `jumpMultiplier`, and `gravityMultiplier`. Titles are 1–80 characters; descriptions are at most 500 characters; control characters are rejected. Multipliers are finite numbers from 0.5 through 3. Fields cannot be mixed across games.
 
-`format` is `modalore-recipe`. Dependencies are Terraria, tModLoader, and ModaloreRules. This preview always exports `supportedVersions: "unverified"` and evidence `{schema: true, build: false, launch: false, gameplay: false}`. It never trusts a package's claim of successful gameplay.
+`format` is `modalore-recipe`. Version 1 dependencies are Terraria, tModLoader, and ModaloreRules with `supportedVersions: "unverified"`. Version 2 dependencies are Luanti, Minetest Game, and ModaloreMovement, with `supportedVersions: "Luanti 5.18.0; Minetest Game 9e895af6e9feb98332fa1a778001442f5669bc20"`. Both export evidence `{schema: true, build: false, launch: false, gameplay: false}`. A local session's readback is not transferred as a claim that the recipient's computer has played the package.
 
 Two identities serve different purposes:
 

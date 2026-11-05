@@ -14,8 +14,10 @@ import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import { CodexClient, artifactPrompt, redact } from "./codex/index.js";
 import { ProjectStore } from "./store.js";
-import { validateRecipe } from "../shared/recipe.js";
+import { validateWorkshopRecipe as validateRecipe } from "../shared/recipe.js";
 import * as game from "./game/adapter.js";
+import * as luanti from "./game/luanti.js";
+import { setupLuantiRuntime } from "./game/provision.js";
 import type { Progress, Snapshot } from "../renderer/api.js";
 
 // Keep explicit test/custom data roots independent, including Electron's cache
@@ -46,6 +48,29 @@ let gameState: Snapshot["game"] = {
   found: false,
   message: "Check for Terraria and tModLoader to get started.",
 };
+let luantiState: Snapshot["luanti"] = {
+  found: false,
+  message: "Set up the free game to start playing.",
+};
+let settings: { gameDirectory?: string; luantiDirectory?: string } = {};
+async function saveSettings(change: Partial<typeof settings>) {
+  const next = { ...settings, ...change };
+  await game.atomicWrite(
+    path.join(store.root, "settings.json"),
+    JSON.stringify(next),
+  );
+  settings = next;
+}
+async function detectLuanti() {
+  luantiState = await luanti.detectLuanti([
+    ...(settings.luantiDirectory ? [settings.luantiDirectory] : []),
+    ...(process.env.MODALORE_LUANTI_DIR
+      ? [process.env.MODALORE_LUANTI_DIR]
+      : []),
+    path.join(store.root, "runtimes", "luanti-5.18.0"),
+  ]);
+  return luantiState;
+}
 let codexState: Snapshot["codex"] = {
   available: false,
   signedIn: false,
@@ -61,19 +86,7 @@ const runtimeDirectory = () =>
   app.isPackaged
     ? path.join(process.resourcesPath, "runtime", "ModaloreRules")
     : path.join(app.getAppPath(), "runtime", "ModaloreRules");
-const plainRecipe = (input: unknown) => {
-  if (!input || typeof input !== "object")
-    throw new Error("A recipe is required.");
-  const r = input as Record<string, unknown>;
-  return validateRecipe({
-    schemaVersion: r.schemaVersion,
-    title: r.title,
-    description: r.description,
-    damageMultiplier: r.damageMultiplier,
-    enemyHealthMultiplier: r.enemyHealthMultiplier,
-    coinMultiplier: r.coinMultiplier,
-  });
-};
+const plainRecipe = validateRecipe;
 async function detect() {
   const detected = await game.detectGame();
   const location = detected.locations.find((l) => l.tModLoader);
@@ -140,11 +153,65 @@ function registerHandlers() {
     const projects = await store.list();
     return {
       game: gameState,
+      luanti: luantiState,
       codex: codexState,
       projects: projects.filter((p) => !p.archivedAt),
       archivedProjects: projects.filter((p) => p.archivedAt),
     };
   });
+  handle("detectLuanti", detectLuanti);
+  handle(
+    "pickLuanti",
+    async () => {
+      const selected = await dialog.showOpenDialog(window, {
+        title: "Choose your Luanti folder (contains bin and games)",
+        properties: ["openDirectory"],
+      });
+      if (selected.canceled) return luantiState;
+      const found = await luanti.detectLuanti([selected.filePaths[0]]);
+      if (!found.found || !found.path) throw new Error(found.message);
+      await saveSettings({ luantiDirectory: found.path });
+      luantiState = found;
+      return found;
+    },
+    true,
+  );
+  handle(
+    "setupLuanti",
+    async () => {
+      active = new AbortController();
+      try {
+        const directory = await setupLuantiRuntime(store.root, {
+          signal: active.signal,
+          onProgress: (message: string) =>
+            send({ stage: "setup", message, status: "running" }),
+        });
+        const found = await luanti.detectLuanti([directory]);
+        if (!found.found) throw new Error(found.message);
+        await saveSettings({ luantiDirectory: directory });
+        luantiState = found;
+        send({
+          stage: "setup",
+          message:
+            "The free game is ready. Open a Minetest Game recipe and choose Play.",
+          status: "complete",
+        });
+        return found;
+      } catch (error) {
+        send({
+          stage: "setup",
+          message: active.signal.aborted
+            ? "Game setup stopped. Existing projects are unchanged."
+            : redact((error as Error).message),
+          status: active.signal.aborted ? "cancelled" : "error",
+        });
+        throw error;
+      } finally {
+        active = undefined;
+      }
+    },
+    true,
+  );
   handle("detectGame", detect);
   handle("pickGame", async () => {
     const selected = await dialog.showOpenDialog(window, {
@@ -167,10 +234,7 @@ function registerHandlers() {
       message:
         "tModLoader found. Gameplay compatibility has not been verified.",
     };
-    await fs.writeFile(
-      path.join(store.root, "settings.json"),
-      JSON.stringify({ gameDirectory: dir }),
-    );
+    await saveSettings({ gameDirectory: dir });
     return gameState;
   });
   handle("connectCodex", async () => {
@@ -248,7 +312,11 @@ function registerHandlers() {
           signal: active.signal,
           timeoutMs: 180000,
           prompt: artifactPrompt(
-            `Edit recipe.json. Supported schema is exactly {schemaVersion:1,title:string (1–80 chars),description:string (0–500 chars),damageMultiplier:number,enemyHealthMultiplier:number,coinMultiplier:number}. All three multipliers must be finite between 0.5 and 3. No additional fields. These are the ONLY supported mechanics: player damage, enemy health, and enemy coin rewards. If the request needs any unsupported mechanic, do not pretend to implement it: leave the recipe unchanged and explain the limitation. Preserve unspecified fields. The user's change request follows:\n${request}`,
+            `Edit recipe.json. Supported schema is exactly ${
+              project.recipe.schemaVersion === 2
+                ? '{schemaVersion:2,game:"luanti-minetest-game",title:string (1–80 chars),description:string (0–500 chars),speedMultiplier:number,jumpMultiplier:number,gravityMultiplier:number}. These are the ONLY supported mechanics: player movement speed, jump impulse, and gravity.'
+                : "{schemaVersion:1,title:string (1–80 chars),description:string (0–500 chars),damageMultiplier:number,enemyHealthMultiplier:number,coinMultiplier:number}. These are the ONLY supported mechanics: player damage, enemy health, and enemy coin rewards."
+            } All three multipliers must be finite between 0.5 and 3. No additional fields or change of game/schema. If the request needs any unsupported mechanic, do not pretend to implement it: leave the recipe unchanged and explain the limitation. Preserve unspecified fields. The user's change request follows:\n${request}`,
             "recipe.json",
           ),
           onProgress: (p) =>
@@ -323,7 +391,9 @@ function registerHandlers() {
         if (JSON.stringify(recipe) === JSON.stringify(project.recipe))
           throw new Error(
             result.message.slice(0, 1200) ||
-              "The recipe did not change. Try changing damage, enemy health, or coin rewards.",
+              (project.recipe.schemaVersion === 2
+                ? "The recipe did not change. Try changing movement speed, jump or gravity."
+                : "The recipe did not change. Try changing damage, enemy health, or coin rewards."),
           );
         if (active.signal.aborted)
           throw new Error(
@@ -399,6 +469,86 @@ function registerHandlers() {
     "play",
     async (id: string) => {
       const project = await store.readActive(id);
+      if (project.recipe.schemaVersion === 2) {
+        if (!luantiState?.found || !luantiState.path)
+          throw new Error(
+            "Open Setup and choose Set up free game before playing.",
+          );
+        active = new AbortController();
+        send({
+          stage: "launch",
+          message: "Preparing your separate Minetest Game world",
+          status: "running",
+        });
+        try {
+          const template = app.isPackaged
+            ? path.join(process.resourcesPath, "runtime", "luanti")
+            : path.join(app.getAppPath(), "runtime", "luanti");
+          const launched = await luanti.launchLuanti(
+            store.root,
+            id,
+            luantiState.path,
+            template,
+            { signal: active.signal },
+          );
+          send({
+            stage: "launch",
+            message: "Waiting for your player to join the new world",
+            status: "running",
+          });
+          let report: Awaited<ReturnType<typeof luanti.readLuantiReport>> =
+            null;
+          const deadline = Date.now() + 20000;
+          while (!report && Date.now() < deadline && !active.signal.aborted) {
+            try {
+              report = await luanti.readLuantiReport(
+                store.root,
+                id,
+                launched.sessionId,
+              );
+            } catch (error) {
+              if (!(error instanceof SyntaxError)) throw error;
+            }
+            if (!report)
+              await new Promise((resolve) => setTimeout(resolve, 250));
+          }
+          if (active.signal.aborted)
+            throw new Error(
+              "Game launch stopped. Your saved recipe is unchanged.",
+            );
+          if (report && !report.matches)
+            throw new Error(
+              "The game started, but its player settings differ from this recipe. Close the game and retry.",
+            );
+          await store.save({
+            ...project,
+            checkpoint: launched.snapshotId,
+            status: report
+              ? "Player settings confirmed · separate world"
+              : "Game process started · player settings not confirmed",
+          });
+          send({
+            stage: "launch",
+            message: report
+              ? "Your player joined with the recipe's settings"
+              : "Game process started; player settings not confirmed yet",
+            detail: report ? report.evidence : launched.warning,
+            status: "complete",
+          });
+          return {
+            message: `${report ? "Your player joined with the requested speed, jump and gravity." : "Minetest Game started, but player settings have not been confirmed. Check its window for an error."} Use W A S D to move and Space to jump. Close the game before changing the recipe.`,
+          };
+        } catch (error) {
+          send({
+            stage: "launch",
+            message: redact((error as Error).message),
+            status: active.signal.aborted ? "cancelled" : "error",
+          });
+          throw error;
+        } finally {
+          active = undefined;
+        }
+      }
       if (!gameState?.found || !gameState.path)
         throw new Error("Open Setup and locate tModLoader before playing.");
       const consent = await dialog.showMessageBox(window, {
@@ -503,7 +653,7 @@ function registerHandlers() {
           type: "warning",
           message: "Restore saves and discard later progress?",
           detail:
-            "This changes only this Modalore profile. Your original Terraria saves stay separate.",
+            "This changes only this Modalore profile. Your original game saves stay separate.",
           buttons: ["Cancel", "Restore checkpoint"],
           defaultId: 0,
           cancelId: 0,
@@ -521,6 +671,7 @@ function registerHandlers() {
     const links: Record<string, string> = {
       codex: "https://developers.openai.com/codex/cli/",
       tmodloader: "https://store.steampowered.com/app/1281930/tModLoader/",
+      luanti: "https://www.luanti.org/",
     };
     if (!Object.hasOwn(links, key)) throw new Error("Unknown help link");
     await shell.openExternal(links[key]);
@@ -535,9 +686,13 @@ app
     );
     await store.init();
     try {
-      const settings = JSON.parse(
+      const savedSettings = JSON.parse(
         await fs.readFile(path.join(store.root, "settings.json"), "utf8"),
       );
+      if (typeof savedSettings.gameDirectory === "string")
+        settings.gameDirectory = savedSettings.gameDirectory;
+      if (typeof savedSettings.luantiDirectory === "string")
+        settings.luantiDirectory = savedSettings.luantiDirectory;
       if (
         typeof settings.gameDirectory === "string" &&
         (
@@ -552,6 +707,7 @@ app
     } catch {
       await detect();
     }
+    await detectLuanti();
     protocol.handle("modalore", (request) => {
       const url = new URL(request.url);
       if (url.host !== "app") return new Response("Not found", { status: 404 });
@@ -589,9 +745,9 @@ app
         event.preventDefault();
         void dialog
           .showMessageBox(window, {
-            message: "Stop creation and close Modalore?",
+            message: "Stop the current operation and close Modalore?",
             detail: "Your last saved version will remain available.",
-            buttons: ["Keep creating", "Stop and close"],
+            buttons: ["Keep working", "Stop and close"],
             defaultId: 0,
             cancelId: 0,
           })

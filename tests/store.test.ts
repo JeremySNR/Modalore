@@ -107,6 +107,13 @@ test("restoring a selected version preserves later versions, ancestry and saves 
       exportPackage(original.recipe, original.parentHash),
     );
     assert.equal(restored.history.length, 3);
+    assert.equal(restored.history[1].recipe.schemaVersion, 1);
+    assert.equal(second.recipe.schemaVersion, 1);
+    if (
+      restored.history[1].recipe.schemaVersion !== 1 ||
+      second.recipe.schemaVersion !== 1
+    )
+      throw new Error("Unexpected game");
     assert.equal(
       restored.history[1].recipe.coinMultiplier,
       second.recipe.coinMultiplier,
@@ -245,6 +252,41 @@ test("legacy history migrates without fabricated dates and invalid records fail 
     );
     await assert.rejects(store.read(original.id), /Invalid project history/);
     assert.equal((await readProfile(root, original.id)).hash, original.hash);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("cross-game updates and corrupt mixed history are rejected before mutation", async () => {
+  const root = path.resolve(".local", `store-games-${randomUUID()}`);
+  try {
+    const store = new ProjectStore(root);
+    const legacy = {
+      schemaVersion: 1,
+      title: "Legacy",
+      description: "",
+      damageMultiplier: 1,
+      enemyHealthMultiplier: 1,
+      coinMultiplier: 1,
+    };
+    const luanti = {
+      schemaVersion: 2,
+      game: "luanti-minetest-game",
+      title: "Movement",
+      description: "",
+      speedMultiplier: 1,
+      jumpMultiplier: 2,
+      gravityMultiplier: 1,
+    };
+    const p = await store.create(luanti);
+    await assert.rejects(store.update(p.id, legacy), /game/);
+    assert.equal((await readProfile(root, p.id)).hash, p.hash);
+    const file = path.join(root, "projects", `${p.id}.json`);
+    const record = JSON.parse(await fs.readFile(file, "utf8"));
+    record.history = [{ id: "a".repeat(64), recipe: legacy }];
+    await fs.writeFile(file, JSON.stringify(record));
+    await assert.rejects(store.restoreVersion(p.id, "a".repeat(64)), /history/);
+    assert.equal((await readProfile(root, p.id)).hash, p.hash);
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

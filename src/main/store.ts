@@ -7,7 +7,10 @@ import {
   revertVersion,
   readProfile,
 } from "./game/adapter.js";
-import { validateRecipe, type Recipe } from "../shared/recipe.js";
+import {
+  validateWorkshopRecipe as validateRecipe,
+  type WorkshopRecipe as Recipe,
+} from "../shared/recipe.js";
 
 type PreviousVersion = { recipe: Recipe; parentHash?: string };
 export type ProjectVersion = PreviousVersion & { id: string; savedAt?: string };
@@ -81,6 +84,12 @@ export class ProjectStore {
       throw new Error("Invalid project history");
     p.name = p.recipe.title;
     p.previousRecipes = p.previousRecipes.map(previousVersion);
+    if (
+      p.previousRecipes.some(
+        (v) => v.recipe.schemaVersion !== p.recipe.schemaVersion,
+      )
+    )
+      throw new Error("Invalid project history");
     // Older releases kept a rollback stack only. Stable IDs make it usable as
     // visible history without changing the record merely by opening the library.
     p.history ??= p.previousRecipes.map((v, index) => ({
@@ -98,6 +107,10 @@ export class ProjectStore {
         throw new Error("Invalid project history");
       return { ...previous, id: v.id, savedAt: v.savedAt };
     });
+    if (
+      p.history.some((v) => v.recipe.schemaVersion !== p.recipe.schemaVersion)
+    )
+      throw new Error("Invalid project history");
     if (new Set(p.history.map((v) => v.id)).size !== p.history.length)
       throw new Error("Duplicate project history identity");
     const profile = await readProfile(this.root, id);
@@ -152,7 +165,10 @@ export class ProjectStore {
       name: recipe.title,
       recipe,
       updatedAt: new Date().toISOString(),
-      status: "Recipe checked · game build pending",
+      status:
+        recipe.schemaVersion === 2
+          ? "Recipe checked · play to try"
+          : "Recipe checked · game build pending",
       hash: version.hash,
       parentHash,
       previousRecipes: [],
@@ -162,6 +178,8 @@ export class ProjectStore {
   async update(id: string, input: unknown) {
     const recipe = validateRecipe(input),
       current = await this.readActive(id);
+    if (recipe.schemaVersion !== current.recipe.schemaVersion)
+      throw new Error("Cannot change a project's game");
     if (JSON.stringify(recipe) === JSON.stringify(current.recipe))
       return current;
     const version = await installRecipe(this.root, id, recipe);
@@ -173,7 +191,10 @@ export class ProjectStore {
         hash: version.hash,
         parentHash: current.hash,
         updatedAt: new Date().toISOString(),
-        status: "Recipe checked · game build pending",
+        status:
+          recipe.schemaVersion === 2
+            ? "Recipe checked · play to try"
+            : "Recipe checked · game build pending",
         history: this.recordHistory(current),
         previousRecipes: [
           ...current.previousRecipes,
@@ -198,7 +219,10 @@ export class ProjectStore {
         hash: version.hash,
         parentHash: previous.parentHash,
         updatedAt: new Date().toISOString(),
-        status: "Earlier recipe restored · rebuild before playing",
+        status:
+          previous.recipe.schemaVersion === 2
+            ? "Earlier recipe restored · play to try"
+            : "Earlier recipe restored · rebuild before playing",
         previousRecipes: current.previousRecipes.slice(0, -1),
         history: this.recordHistory(current),
       });
@@ -231,7 +255,10 @@ export class ProjectStore {
         hash: version.hash,
         parentHash: previous.parentHash,
         updatedAt: new Date().toISOString(),
-        status: "Earlier recipe restored · rebuild before playing",
+        status:
+          previous.recipe.schemaVersion === 2
+            ? "Earlier recipe restored · play to try"
+            : "Earlier recipe restored · rebuild before playing",
         history: this.recordHistory(current),
         previousRecipes: [
           ...current.previousRecipes,

@@ -12,9 +12,9 @@
 
 [0.1.0-alpha.1 release notes and checksums](https://github.com/JeremySNR/Modalore/releases/tag/v0.1.0-alpha.1). Unsigned Windows x64 preview.
 
-**Modalore is an open-source desktop app for making small changes to games you own.** Start with a recipe, adjust it with simple controls, or describe a change to your local Codex CLI. Save the result and send the recipe to a friend.
+**Modalore is a desktop app for changing the way a game plays.** Run faster, jump higher, or try lighter gravity. Start with a recipe, adjust a slider, or ask your own Codex CLI to make a change. Send the exact recipe to a friend.
 
-**Early Windows preview — not a finished mod launcher.** Local recipe creation, revision, import/export and recovery are implemented. Real Codex artifact creation, follow-up and cancellation have been exercised. Terraria/tModLoader was unavailable during development: the runtime build, game launch, game compatibility and in-game save isolation still need validation. The app labels those gaps and asks before attempting an experimental play session. See the [verification record](docs/VERIFICATION.md).
+**The free-game path uses Luanti + Minetest Game.** Modalore downloads a pinned, verified portable copy when you choose **Set up free game**, then gives each project its own world. Real Codex creation/revision, native game launch, connected-player settings, clean import and save recovery have passed local Windows checks. Visual movement inspection and clean-PC testing are still outstanding. Terraria recipes remain experimental. See [what was actually tested](docs/VERIFICATION.md).
 
 ![The actual Modalore desktop interface](docs/desktop-native.png)
 
@@ -22,24 +22,27 @@
 
 1. Open [Releases](https://github.com/JeremySNR/Modalore/releases) and choose the latest **Windows preview**.
 2. Download the **Setup .exe** to install, or the **Portable .exe** to try without installing. Both are Windows x64. These preview downloads are **unsigned**, so Windows may show an unknown-publisher warning. Only use files from this repository and compare the supplied SHA-256 checksum if needed.
-3. Open Modalore, choose an idea, and select **Make it mine**.
-4. Adjust **player damage**, **enemy health**, or **coin rewards**, then save. No AI account is needed for sliders, importing or exporting recipes.
-5. For natural-language changes, open **Setup → Codex connection**. Modalore uses your installed Codex CLI and its supported sign-in. Creation uses your account’s applicable allowance.
+3. Open **Setup → Set up free game**. This downloads about 25 MB. No purchase, terminal or AI account is needed to play.
+4. Open **Long strides → Play sample** to start a separate world. Move with **W A S D**, jump with **Space**, and use **Escape** to leave the game.
+5. Choose **Make it mine**, adjust speed, jump or gravity, save, and play again. Close the game before changing its recipe. **Export this version** gives you a small file your friend can import.
+6. For natural-language changes, open **Setup → Codex connection**. Modalore uses your separately installed Codex CLI and its supported sign-in. Creation uses your account’s applicable allowance.
 
-For experimental game testing, install your own **Terraria** and **tModLoader** through Steam. Select their location in Setup, then use Play. The app builds its own small runtime and requests a separate profile; create a **new single-player character and world**. Do not use original saves or multiplayer in this preview. [Read the full walkthrough](docs/GETTING_STARTED.md).
+Your first project starts a new Minetest Game world; existing saves are not imported. Archived projects can be brought back, and version history lets you restore earlier settings. [Read the full walkthrough](docs/GETTING_STARTED.md).
 
 ### What you can make
 
-Recipes change three bounded values from 50% to 300%: player damage, hostile enemy health, and enemy coin rewards. Try “Give enemies twice the health and double their coin rewards.” Fine-tune the same values without a model call.
+**Minetest Game:** change movement speed, jump impulse and gravity from 50% to 300%. Try “Give me higher jumps and lighter gravity.” Lower gravity lets you stay in the air longer. Minetest Game is a peaceful exploration, mining and building game; it has no built-in enemies or coin rewards.
+
+**Terraria / tModLoader (experimental):** recipes change player damage, hostile enemy health and coin rewards. This separate adapter has not been built or played against an installed game. It requires your own Terraria installation.
 
 Requests such as “Defeated enemies join my army” require mechanics that are **not implemented**. Codex is instructed to explain that boundary. Imported recipes contain data only; they cannot add executable code.
 
 | Available in this preview                                            | Still to prove or build                                      |
 | -------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Windows desktop UI, local library, original concept illustrations    | Gameplay footage and a verified playable gallery             |
+| Windows desktop UI, version history, reversible archive, concept art | Gameplay footage and broad novice user testing                |
 | Real local Codex app-server connection, approvals, progress and stop | Broad stable-CLI compatibility and clean-machine onboarding  |
-| Validated recipes, immutable versions, hash-checked import/export    | Game build and actual gameplay acceptance tests              |
-| Separate profile directories and tested save-copy/restore operations | In-game isolation validation, copying an existing save       |
+| Luanti setup, launch, player-settings readback and fresh-world import | Visual movement tests and broader game/version support       |
+| Separate worlds and checkpoint restore after actual game writes    | Copying an existing save and clean-machine testing            |
 | File sharing with parent-version attribution                         | Hosted publishing, live share pages, rankings or multiplayer |
 
 There are no fake live share links, download counts, usage balances or gameplay recordings. A successful schema check is not a successful game test. Package hashes check integrity; they do not establish who made a file.

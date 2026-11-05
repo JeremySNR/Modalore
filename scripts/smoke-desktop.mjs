@@ -109,6 +109,17 @@ try {
   ).projects.find((p) => p.id === project.id);
   assert.equal(afterRestore.history.length, 2);
   assert.equal(afterRestore.history.at(-1).recipe.coinMultiplier, 2);
+  await page.getByRole("slider", { name: /Coins/ }).fill("2");
+  await expect(
+    page.getByText("Unsaved changes", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Play", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Export this version", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("slider", { name: /Coins/ }).fill("1.5");
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "docs/desktop-history.png", fullPage: true });
   assert.deepEqual(

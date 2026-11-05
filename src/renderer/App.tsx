@@ -26,14 +26,38 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
-import type { Progress, Project, Recipe, Snapshot } from "./api";
+import type { Progress, Project, WorkshopRecipe, Snapshot } from "./api";
 
-type Sample = Recipe & {
+type Sample = WorkshopRecipe & {
   id: string;
   subtitle: string;
   theme: "grove" | "ember" | "night";
 };
 const samples: Sample[] = [
+  {
+    id: "strides",
+    title: "Long strides",
+    subtitle: "Move faster",
+    description: "Explore with a faster walking speed.",
+    theme: "grove",
+    schemaVersion: 2,
+    game: "luanti-minetest-game",
+    speedMultiplier: 1.5,
+    jumpMultiplier: 1,
+    gravityMultiplier: 1,
+  },
+  {
+    id: "hops",
+    title: "Moon hops",
+    subtitle: "Jump higher with lighter gravity",
+    description: "Change your jump and gravity for a floatier adventure.",
+    theme: "night",
+    schemaVersion: 2,
+    game: "luanti-minetest-game",
+    speedMultiplier: 1,
+    jumpMultiplier: 1.4,
+    gravityMultiplier: 0.8,
+  },
   {
     id: "wildwood",
     title: "The Wildwood",
@@ -70,6 +94,32 @@ const samples: Sample[] = [
     enemyHealthMultiplier: 0.9,
   },
 ];
+const gameName = (r: WorkshopRecipe) =>
+  r.schemaVersion === 2
+    ? "Minetest Game / Luanti"
+    : "Terraria / tModLoader · experimental";
+const values = (r: WorkshopRecipe): Array<[string, number]> =>
+  r.schemaVersion === 2
+    ? [
+        ["Speed", r.speedMultiplier],
+        ["Jump", r.jumpMultiplier],
+        ["Gravity", r.gravityMultiplier],
+      ]
+    : [
+        ["Enemy health", r.enemyHealthMultiplier],
+        ["Damage", r.damageMultiplier],
+        ["Coins", r.coinMultiplier],
+      ];
+const valueSummary = (r: WorkshopRecipe) =>
+  `${gameName(r)} · ${values(r)
+    .map(([label, value]) => `${label} ${Math.round(value * 100)}%`)
+    .join(" · ")}`;
+const sampleFromRecipe = (r: WorkshopRecipe): Sample => ({
+  ...r,
+  id: "project",
+  subtitle: "",
+  theme: r.schemaVersion === 2 ? "grove" : "ember",
+});
 type Page = "discover" | "library" | "detail" | "studio" | "setup";
 const initial: Snapshot = { projects: [] };
 
@@ -200,6 +250,7 @@ function App() {
     fn: () => Promise<T>,
     success?: string,
   ): Promise<T | undefined> => {
+    if (busy) return undefined;
     setBusy(true);
     setNotice("");
     try {
@@ -231,14 +282,25 @@ function App() {
     setProject(null);
     setPage("studio");
   };
-  const cleanRecipe = (r: Sample): Recipe => ({
-    schemaVersion: 1,
-    title: r.title,
-    description: r.description,
-    damageMultiplier: r.damageMultiplier,
-    enemyHealthMultiplier: r.enemyHealthMultiplier,
-    coinMultiplier: r.coinMultiplier,
-  });
+  const cleanRecipe = (r: Sample): WorkshopRecipe =>
+    r.schemaVersion === 2
+      ? {
+          schemaVersion: 2,
+          game: r.game,
+          title: r.title,
+          description: r.description,
+          speedMultiplier: r.speedMultiplier,
+          jumpMultiplier: r.jumpMultiplier,
+          gravityMultiplier: r.gravityMultiplier,
+        }
+      : {
+          schemaVersion: 1,
+          title: r.title,
+          description: r.description,
+          damageMultiplier: r.damageMultiplier,
+          enemyHealthMultiplier: r.enemyHealthMultiplier,
+          coinMultiplier: r.coinMultiplier,
+        };
   const create = async () => {
     if (!window.modalore) return unavailable();
     const p = await action(() =>
@@ -248,7 +310,7 @@ function App() {
     );
     if (p) {
       setProject(p);
-      setDraft((d) => ({ ...d, ...p.recipe }));
+      setDraft(sampleFromRecipe(p.recipe));
       setNotice("Project saved to your library.");
     }
   };
@@ -272,7 +334,7 @@ function App() {
     );
     if (p) {
       setProject(p);
-      setDraft((d) => ({ ...d, ...p.recipe }));
+      setDraft(sampleFromRecipe(p.recipe));
       setPrompt("");
     }
   };
@@ -283,7 +345,7 @@ function App() {
     );
     if (!p) return;
     setProject(p);
-    setDraft({ ...selected, ...p.recipe });
+    setDraft(sampleFromRecipe(p.recipe));
     setPage("studio");
     const result = await action(() => window.modalore![kind](p.id));
     if (result && "message" in result && result.message)
@@ -303,7 +365,7 @@ function App() {
       const restored = fresh.projects?.find((p) => p.id === project.id);
       if (restored) {
         setProject(restored);
-        setDraft((d) => ({ ...d, ...restored.recipe }));
+        setDraft(sampleFromRecipe(restored.recipe));
       }
     }
   };
@@ -334,7 +396,7 @@ function App() {
     );
     if (result) {
       setProject(result);
-      setDraft((d) => ({ ...d, ...result.recipe }));
+      setDraft(sampleFromRecipe(result.recipe));
       setNotice(
         "Version restored. Your other versions and saves are still available.",
       );
@@ -350,13 +412,24 @@ function App() {
   const showProject = (p: Project) => {
     setProgress(null);
     setProject(p);
-    setDraft({ ...samples[0], ...p.recipe });
-    setSelected({ ...samples[0], ...p.recipe });
+    setDraft(sampleFromRecipe(p.recipe));
+    setSelected(sampleFromRecipe(p.recipe));
     setPage("studio");
   };
+  const filteredSamples = samples.filter(
+    (s) =>
+      filter === "All games" ||
+      (filter === "Minetest Game"
+        ? s.schemaVersion === 2
+        : s.schemaVersion === 1),
+  );
+  const featured = filteredSamples[0];
   const restoringVersion = project?.history?.find(
     (v) => v.id === restoreVersionId,
   );
+  const dirty =
+    !!project &&
+    JSON.stringify(cleanRecipe(draft)) !== JSON.stringify(project.recipe);
   return (
     <div className="shell">
       <aside className={`sidebar ${menu ? "open" : ""}`}>
@@ -451,8 +524,14 @@ function App() {
           </div>
           <div className="top-right">
             <span className="top-status">
-              <span className={`status-dot ${native ? "" : "muted"}`} />
-              {native ? "Desktop app" : "Preview mode"}
+              <span
+                className={`status-dot ${native && (snapshot.luanti?.found || snapshot.game?.found) ? "" : "muted"}`}
+              />
+              {native
+                ? snapshot.luanti?.found || snapshot.game?.found
+                  ? "Game ready"
+                  : "Set up a game"
+                : "Preview mode"}
             </span>
             <button
               className="icon-button"
@@ -494,8 +573,8 @@ function App() {
                 <span className="eyebrow">Discover</span>
                 <h1>Your games. Your rules.</h1>
                 <p>
-                  Explore sample recipes for Terraria, then adjust them to suit
-                  your game.
+                  Try a free Minetest Game recipe, or explore experimental
+                  Terraria ideas.
                 </p>
               </div>
               <div className="heading-index"></div>
@@ -515,14 +594,15 @@ function App() {
                   onChange={(e) => setFilter(e.target.value)}
                 >
                   <option>All games</option>
+                  <option>Minetest Game</option>
                   <option>Terraria</option>
                 </select>
                 <ChevronDown size={14} />
               </div>
             </div>
-            <button className="feature" onClick={() => openDetail(samples[0])}>
+            <button className="feature" onClick={() => openDetail(featured)}>
               <div className="feature-art">
-                <Art theme="grove" />
+                <Art theme={featured.theme} />
                 <span className="art-label">
                   Original concept art · not game footage
                 </span>
@@ -532,14 +612,11 @@ function App() {
                 <div>
                   <div className="tag-row">
                     <span className="tag">Sample recipe</span>
-                    <span className="tag subtle">Terraria / tModLoader</span>
+                    <span className="tag subtle">{gameName(featured)}</span>
                   </div>
                   <p className="feature-kicker">Featured sample</p>
-                  <h3>The Wildwood</h3>
-                  <p className="feature-description">
-                    A starting recipe with higher enemy health and increased
-                    coin rewards.
-                  </p>
+                  <h3>{featured.title}</h3>
+                  <p className="feature-description">{featured.description}</p>
                 </div>
                 <div className="feature-footer">
                   <span>View recipe</span>
@@ -557,7 +634,7 @@ function App() {
               <span>CURATED IDEAS / 02—03</span>
             </div>
             <div className="collection">
-              {samples.slice(1).map((s, i) => (
+              {filteredSamples.slice(1).map((s, i) => (
                 <button
                   className="collection-item"
                   key={s.id}
@@ -569,7 +646,7 @@ function App() {
                   </div>
                   <div className="collection-copy">
                     <div className="collection-meta">
-                      <span>Sample recipe · TERRARIA</span>
+                      <span>Sample recipe · {gameName(s)}</span>
                       <span>0{i + 2}</span>
                     </div>
                     <h3>{s.title}</h3>
@@ -582,8 +659,9 @@ function App() {
               ))}
             </div>
             <p className="footnote">
-              These are concept recipes, not verified gameplay. Availability
-              depends on your setup and supported mechanics.
+              Luanti player settings have been applied and read back in the
+              engine. Gameplay effects have not yet been observed by a person.
+              Terraria recipes are experimental.
             </p>
           </div>
         )}
@@ -602,7 +680,7 @@ function App() {
               <div>
                 <div className="tag-row">
                   <span className="tag">Sample recipe</span>
-                  <span className="tag subtle">Terraria / tModLoader</span>
+                  <span className="tag subtle">{gameName(selected)}</span>
                 </div>
                 <h1>{selected.title}</h1>
                 <p className="detail-lede">{selected.description}</p>
@@ -610,29 +688,16 @@ function App() {
                 <span className="eyebrow">About this recipe</span>
                 <h2>What this recipe changes</h2>
                 <p className="body-copy">
-                  Start with a suggested balance, then adjust it to suit the way
-                  you like to play. This is a concept recipe; its effects and
-                  compatibility have not been verified in a game session.
+                  Adjust the suggested settings to suit the way you like to
+                  play. Gameplay effects have not yet been observed by a person.
                 </p>
                 <div className="stats">
-                  <div>
-                    <strong>
-                      {Math.round(selected.enemyHealthMultiplier * 100)}%
-                    </strong>
-                    <span>Enemy health</span>
-                  </div>
-                  <div>
-                    <strong>
-                      {Math.round(selected.damageMultiplier * 100)}%
-                    </strong>
-                    <span>Damage</span>
-                  </div>
-                  <div>
-                    <strong>
-                      {Math.round(selected.coinMultiplier * 100)}%
-                    </strong>
-                    <span>Coins</span>
-                  </div>
+                  {values(selected).map(([label, value]) => (
+                    <div key={label}>
+                      <strong>{Math.round(value * 100)}%</strong>
+                      <span>{label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
               <aside className="detail-aside">
@@ -663,7 +728,7 @@ function App() {
                 </div>
                 <p className="aside-small">
                   These actions first save this sample as your project. Gameplay
-                  is unverified. Play requires Terraria and tModLoader; sharing
+                  is unverified. Play requires the game shown above; sharing
                   exports a recipe file.
                 </p>
                 <button className="text-link" onClick={() => nav("setup")}>
@@ -737,7 +802,9 @@ function App() {
                         <div>
                           <span className="eyebrow">Project</span>
                           <h3>{p.name}</h3>
-                          <p>{p.status || "Open project"}</p>
+                          <p>
+                            {gameName(p.recipe)} · {p.status || "Open project"}
+                          </p>
                         </div>
                         <ArrowUpRight size={20} />
                       </button>
@@ -749,7 +816,7 @@ function App() {
                         <div>
                           <span className="eyebrow">Archived project</span>
                           <h3>{p.name}</h3>
-                          <p>Unarchive to edit</p>
+                          <p>{gameName(p.recipe)} · Unarchive to edit</p>
                         </div>
                         <button
                           className="button secondary"
@@ -805,7 +872,8 @@ function App() {
               </div>
               {project && (
                 <span className="saved-badge">
-                  <Check size={14} /> Project saved
+                  <Check size={14} />{" "}
+                  {dirty ? "Unsaved changes" : "Project saved"}
                 </span>
               )}
             </div>
@@ -823,7 +891,7 @@ function App() {
                       {project ? "Project" : "Sample recipe"}
                     </span>
                     <h2>{draft.title || "Untitled project"}</h2>
-                    <p>Terraria / tModLoader</p>
+                    <p>{gameName(draft)}</p>
                   </div>
                   <button
                     className="icon-button"
@@ -856,27 +924,38 @@ function App() {
                   <p>
                     Choose a starting balance. 100% is the unmodified value.
                   </p>
-                  {(
-                    [
-                      ["enemyHealthMultiplier", "Enemy health"],
-                      ["damageMultiplier", "Damage"],
-                      ["coinMultiplier", "Coins"],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <label className="slider-row" key={key}>
+                  {values(draft).map(([label, value], index) => (
+                    <label className="slider-row" key={label}>
                       <span>
                         {label}
-                        <strong>{Math.round(draft[key] * 100)}%</strong>
+                        <strong>{Math.round(value * 100)}%</strong>
                       </span>
                       <input
                         type="range"
                         min="0.5"
                         max="3"
                         step="0.05"
-                        value={draft[key]}
-                        onChange={(e) =>
-                          setDraft({ ...draft, [key]: Number(e.target.value) })
-                        }
+                        value={value}
+                        disabled={busy}
+                        onChange={(e) => {
+                          const key =
+                            draft.schemaVersion === 2
+                              ? (
+                                  [
+                                    "speedMultiplier",
+                                    "jumpMultiplier",
+                                    "gravityMultiplier",
+                                  ] as const
+                                )[index]
+                              : (
+                                  [
+                                    "enemyHealthMultiplier",
+                                    "damageMultiplier",
+                                    "coinMultiplier",
+                                  ] as const
+                                )[index];
+                          setDraft({ ...draft, [key]: Number(e.target.value) });
+                        }}
                       />
                     </label>
                   ))}
@@ -902,10 +981,11 @@ function App() {
                   <span className="eyebrow">Codex</span>
                   <h2>Describe a change</h2>
                   <p>
-                    Describe a change to player damage, enemy health, or enemy
-                    coin rewards. Codex will work on your saved project. Other
-                    mechanics are not supported yet; for an army idea, try
-                    adjusting enemy health instead.
+                    {draft.schemaVersion === 2
+                      ? "Describe a change to speed, jump or gravity."
+                      : "Describe a change to player damage, enemy health or coin rewards."}{" "}
+                    Codex updates the saved recipe; other mechanics are not
+                    supported yet.
                   </p>
                   <label className="sr-only" htmlFor="remix-prompt">
                     Describe your change
@@ -921,20 +1001,30 @@ function App() {
                     <button
                       onClick={() =>
                         setPrompt(
-                          "Give enemies more health and make coin rewards more generous.",
+                          draft.schemaVersion === 2
+                            ? "Make me move faster."
+                            : "Give enemies more health and make coin rewards more generous.",
                         )
                       }
                     >
-                      More enemy health <ArrowUpRight size={13} />
+                      {draft.schemaVersion === 2
+                        ? "Move faster"
+                        : "More enemy health"}{" "}
+                      <ArrowUpRight size={13} />
                     </button>
                     <button
                       onClick={() =>
                         setPrompt(
-                          "Reduce enemy health and increase player damage for a new player.",
+                          draft.schemaVersion === 2
+                            ? "Make jumps higher and gravity lighter."
+                            : "Reduce enemy health and increase player damage for a new player.",
                         )
                       }
                     >
-                      A gentler start <ArrowUpRight size={13} />
+                      {draft.schemaVersion === 2
+                        ? "Moon hops"
+                        : "A gentler start"}{" "}
+                      <ArrowUpRight size={13} />
                     </button>
                   </div>
                   <button
@@ -966,7 +1056,7 @@ function App() {
                         className="text-link"
                         onClick={() =>
                           window.modalore
-                            ? void action(() => window.modalore!.cancel())
+                            ? void window.modalore.cancel()
                             : unavailable()
                         }
                       >
@@ -1032,18 +1122,7 @@ function App() {
                                   {new Date(version.savedAt).toLocaleString()}
                                 </span>
                               )}
-                            <span>
-                              Health{" "}
-                              {Math.round(
-                                version.recipe.enemyHealthMultiplier * 100,
-                              )}
-                              % · Damage{" "}
-                              {Math.round(
-                                version.recipe.damageMultiplier * 100,
-                              )}
-                              % · Coins{" "}
-                              {Math.round(version.recipe.coinMultiplier * 100)}%
-                            </span>
+                            <span>{valueSummary(version.recipe)}</span>
                           </div>
                           {index > 0 && (
                             <button
@@ -1065,17 +1144,22 @@ function App() {
                     <button
                       className="button secondary full"
                       onClick={() => void runProject("play")}
-                      disabled={busy}
+                      disabled={busy || dirty}
                     >
                       <Play size={17} /> Play
                     </button>
                     <button
                       className="button secondary full"
                       onClick={() => void runProject("exportProject")}
-                      disabled={busy}
+                      disabled={busy || dirty}
                     >
                       <Download size={17} /> Export this version
                     </button>
+                    {dirty && (
+                      <p className="small-hint">
+                        Save your adjustments before playing or exporting them.
+                      </p>
+                    )}
                     <button
                       className="text-link"
                       disabled={busy}
@@ -1113,6 +1197,20 @@ function App() {
                 </p>
               </div>
             </div>
+            {progress && busy && (
+              <div className="progress-panel" role="status">
+                <strong>{progress.stage}</strong>
+                <p>{progress.message}</p>
+                {progress.status === "running" && (
+                  <button
+                    className="text-link"
+                    onClick={() => void window.modalore?.cancel()}
+                  >
+                    <Square size={13} /> Cancel
+                  </button>
+                )}
+              </div>
+            )}
             <div className="setup-list">
               <section className="setup-row">
                 <div className="setup-icon">
@@ -1120,7 +1218,83 @@ function App() {
                 </div>
                 <div>
                   <div className="setup-title">
-                    <h2>Terraria & tModLoader</h2>
+                    <h2>Free game: Minetest Game</h2>
+                    <span className="state-pill">
+                      {snapshot.luanti?.found ? "READY" : "NOT SET UP"}
+                    </span>
+                  </div>
+                  <p>
+                    Download Luanti and Minetest Game (approximately 25 MB) to
+                    play in an app-owned world. No purchased game or terminal is
+                    needed.
+                  </p>
+                  {snapshot.luanti?.message && (
+                    <p className="setup-message">{snapshot.luanti.message}</p>
+                  )}
+                  {snapshot.luanti?.path && (
+                    <p className="setup-message">{snapshot.luanti.path}</p>
+                  )}
+                  <div className="button-row">
+                    <button
+                      className="button primary"
+                      disabled={busy || !native}
+                      onClick={() => {
+                        if (!window.modalore) return unavailable();
+                        setProgress({
+                          stage: "Setting up free game",
+                          message: "Preparing download…",
+                          status: "running",
+                        });
+                        void action(() => window.modalore!.setupLuanti());
+                      }}
+                    >
+                      Set up free game
+                    </button>
+                    <button
+                      className="text-link"
+                      disabled={busy}
+                      onClick={() =>
+                        window.modalore
+                          ? void action(() => window.modalore!.detectLuanti())
+                          : unavailable()
+                      }
+                    >
+                      Detect game
+                    </button>
+                    <button
+                      className="text-link"
+                      disabled={busy}
+                      onClick={() =>
+                        window.modalore
+                          ? void action(() => window.modalore!.pickLuanti())
+                          : unavailable()
+                      }
+                    >
+                      <FolderOpen size={16} /> Choose folder
+                    </button>
+                    <button
+                      className="text-link"
+                      disabled={busy}
+                      onClick={() =>
+                        window.modalore
+                          ? void action(() =>
+                              window.modalore!.openExternal("luanti"),
+                            )
+                          : unavailable()
+                      }
+                    >
+                      Luanti information <ArrowUpRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              </section>
+              <section className="setup-row">
+                <div className="setup-icon">
+                  <Gamepad2 size={22} />
+                </div>
+                <div>
+                  <div className="setup-title">
+                    <h2>Terraria & tModLoader · experimental</h2>
                     <span className="state-pill">
                       {snapshot.game?.found ? "FOUND" : "NOT DETECTED"}
                     </span>
@@ -1284,14 +1458,7 @@ function App() {
               <p>
                 <strong>{restoringVersion.recipe.title}</strong>
                 <br />
-                Health{" "}
-                {Math.round(
-                  restoringVersion.recipe.enemyHealthMultiplier * 100,
-                )}
-                % · Damage{" "}
-                {Math.round(restoringVersion.recipe.damageMultiplier * 100)}% ·
-                Coins {Math.round(restoringVersion.recipe.coinMultiplier * 100)}
-                %
+                {valueSummary(restoringVersion.recipe)}
               </p>
             )}
             <p>

@@ -2,21 +2,26 @@ import { createHash, randomUUID } from "node:crypto";
 import { promises as fs, createWriteStream } from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { validateRecipe, type Recipe } from "../../shared/recipe.js";
+import {
+  validateRecipe,
+  validateWorkshopRecipe,
+  type WorkshopRecipe,
+} from "../../shared/recipe.js";
 
 const sha = (s: string) => createHash("sha256").update(s, "utf8").digest("hex");
-const canonical = (r: Recipe) => JSON.stringify(validateRecipe(r));
+const canonical = (r: WorkshopRecipe) =>
+  JSON.stringify(validateWorkshopRecipe(r));
 const idPattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
 function safeId(id: string) {
   if (!idPattern.test(id)) throw new Error("Invalid profile or snapshot ID");
   return id;
 }
-async function assertDirectory(p: string) {
+export async function assertDirectory(p: string) {
   const stat = await fs.lstat(p);
   if (!stat.isDirectory() || stat.isSymbolicLink())
     throw new Error("Expected a real directory");
 }
-async function profilePath(root: string, id: string) {
+export async function profilePath(root: string, id: string) {
   safeId(id);
   await assertDirectory(root);
   const profiles = path.join(root, "profiles");
@@ -72,7 +77,7 @@ async function assertUnlocked(p: string) {
     throw new Error("Profile lock changed; try again");
   await fs.rm(path.join(p, "profile.lock"));
 }
-async function acquireLock(p: string) {
+export async function acquireLock(p: string) {
   await assertUnlocked(p);
   const lock = { pid: process.pid, token: randomUUID() };
   try {
@@ -86,7 +91,7 @@ async function acquireLock(p: string) {
   }
   return lock;
 }
-async function releaseLock(p: string, token: string) {
+export async function releaseLock(p: string, token: string) {
   const lock = await readLock(p);
   if (lock?.token === token)
     await fs.rm(path.join(p, "profile.lock"), { force: true });
@@ -108,7 +113,7 @@ async function renameWithRetry(from: string, to: string) {
     }
   }
 }
-async function atomicWrite(file: string, data: string) {
+export async function atomicWrite(file: string, data: string) {
   const temp = `${file}.${randomUUID()}.tmp`;
   try {
     await fs.writeFile(temp, data, { flag: "wx" });
@@ -117,7 +122,7 @@ async function atomicWrite(file: string, data: string) {
     await fs.rm(temp, { force: true });
   }
 }
-async function recoverInternal(p: string) {
+export async function recoverInternal(p: string) {
   const restoreFile = path.join(p, "restore-journal.json");
   let journal: { staging: string; backup: string } | undefined;
   try {
@@ -247,7 +252,7 @@ export async function createProfile(root: string, id: string) {
 /** Stores a validated recipe as an immutable version; this is not a compiled game mod. */
 export async function installRecipe(root: string, id: string, value: unknown) {
   const p = await profilePath(root, id);
-  const recipe = validateRecipe(value);
+  const recipe = validateWorkshopRecipe(value);
   const bytes = canonical(recipe);
   const hash = sha(bytes);
   await assertUnlocked(p);
@@ -306,7 +311,7 @@ export async function readProfile(root: string, id: string) {
   if (sha(bytes) !== pointer.recipeHash)
     throw new Error("Stored recipe failed integrity check");
   return {
-    recipe: validateRecipe(JSON.parse(bytes)),
+    recipe: validateWorkshopRecipe(JSON.parse(bytes)),
     hash: pointer.recipeHash,
   };
 }
@@ -323,7 +328,7 @@ export async function revertVersion(root: string, id: string, hash: string) {
   );
   if (sha(bytes) !== hash)
     throw new Error("Stored recipe failed integrity check");
-  const recipe = validateRecipe(JSON.parse(bytes));
+  const recipe = validateWorkshopRecipe(JSON.parse(bytes));
   await atomicWrite(
     path.join(p, "current.json"),
     JSON.stringify({ recipeHash: hash }),
@@ -331,15 +336,21 @@ export async function revertVersion(root: string, id: string, hash: string) {
   return { recipe, hash };
 }
 export function exportPackage(value: unknown, parentHash?: string): string {
-  const recipe = validateRecipe(value);
+  const recipe = validateWorkshopRecipe(value);
   if (parentHash && !/^[a-f0-9]{64}$/.test(parentHash))
     throw new Error("Invalid parent hash");
   const content = {
     format: "modalore-recipe" as const,
-    version: 1 as const,
+    version: recipe.schemaVersion,
     recipe,
-    dependencies: ["Terraria", "tModLoader", "ModaloreRules"],
-    supportedVersions: "unverified",
+    dependencies:
+      recipe.schemaVersion === 1
+        ? ["Terraria", "tModLoader", "ModaloreRules"]
+        : ["Luanti", "Minetest Game", "ModaloreMovement"],
+    supportedVersions:
+      recipe.schemaVersion === 1
+        ? "unverified"
+        : "Luanti 5.18.0; Minetest Game 9e895af6e9feb98332fa1a778001442f5669bc20",
     parentHash: parentHash ?? null,
     evidence: { schema: true, build: false, launch: false, gameplay: false },
   };
@@ -370,13 +381,20 @@ export function importPackage(json: string) {
     keys.some((k) => !Object.hasOwn(pkg, k))
   )
     throw new Error("Unexpected package fields");
-  const recipe = validateRecipe(pkg.recipe);
+  const recipe = validateWorkshopRecipe(pkg.recipe);
   if (
     pkg.format !== "modalore-recipe" ||
-    pkg.version !== 1 ||
+    pkg.version !== recipe.schemaVersion ||
     JSON.stringify(pkg.dependencies) !==
-      JSON.stringify(["Terraria", "tModLoader", "ModaloreRules"]) ||
-    pkg.supportedVersions !== "unverified" ||
+      JSON.stringify(
+        recipe.schemaVersion === 1
+          ? ["Terraria", "tModLoader", "ModaloreRules"]
+          : ["Luanti", "Minetest Game", "ModaloreMovement"],
+      ) ||
+    pkg.supportedVersions !==
+      (recipe.schemaVersion === 1
+        ? "unverified"
+        : "Luanti 5.18.0; Minetest Game 9e895af6e9feb98332fa1a778001442f5669bc20") ||
     !(
       pkg.parentHash === null ||
       (typeof pkg.parentHash === "string" &&
@@ -584,6 +602,9 @@ async function snapshot(root: string, id: string, internal: boolean) {
     throw e;
   }
   return snapshotId;
+}
+export async function snapshotLocked(root: string, id: string) {
+  return snapshot(root, id, true);
 }
 export async function snapshotProfile(root: string, id: string) {
   return snapshot(root, id, false);

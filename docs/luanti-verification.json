@@ -1,0 +1,31 @@
+{
+  "scope": "Opt-in isolated Codex-to-Luanti single-player integration probe",
+  "engine": "Luanti 5.18.0",
+  "game": "Minetest Game",
+  "gameId": "minetest_game-9e895af6e9feb98332fa1a778001442f5669bc20",
+  "requested": {
+    "gravity": 0.8,
+    "jump": 1.4,
+    "speed": 1.5
+  },
+  "sourceObserved": {
+    "gravity": 0.800000011920929,
+    "jump": 1.399999976158142,
+    "speed": 1.5
+  },
+  "cleanImportObserved": {
+    "gravity": 0.800000011920929,
+    "jump": 1.399999976158142,
+    "speed": 1.5
+  },
+  "checks": {
+    "codexCreateAndRevise": true,
+    "sourcePlayerPhysicsReadback": true,
+    "exportedWithParentHash": true,
+    "cleanImportPlayerPhysicsReadback": true,
+    "isolatedCheckpointRestored": true,
+    "earlierRecipeHashRestored": true,
+    "interruptedTurnLeftProfilesUnchanged": true
+  },
+  "limitation": "Connected-player physics override API readback only; physical movement was not observed. Game, profiles and saves were isolated under the probe directory."
+}

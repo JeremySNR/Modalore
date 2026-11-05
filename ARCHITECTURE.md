@@ -1,6 +1,6 @@
 # Modalore architecture
 
-Decision date: 4 November 2026. Windows first; Electron + React + TypeScript; Terraria/tModLoader first; local Codex CLI app-server for natural-language creation. See [research](RESEARCH.md).
+Decision dates: 4–5 November 2026. Windows first; Electron + React + TypeScript; Luanti/Minetest Game is the first locally exercised game path; Terraria/tModLoader remains experimental. Natural-language creation uses the local Codex CLI app-server. See [research](RESEARCH.md).
 
 ## Ownership
 
@@ -21,6 +21,10 @@ Simple controls save validated recipe JSON without model calls. Natural-language
 
 After a successful turn, Modalore checks the artifact’s type, size, exact schema and finite bounded numbers. A turn marked completed is insufficient on its own. Invalid, unchanged, failed and cancelled outputs leave the saved project unchanged. The only C# generated is the application’s fixed original template with validated numeric substitutions. Imported packages cannot supply C# or paths.
 
+The Luanti recipe is a separate discriminated schema for speed, jump and gravity. Its original Lua runtime is hash-checked and substituted with validated numbers only. The server mod applies physics overrides on join/respawn and writes a report bound to a fresh launch nonce. Main validates the engine version, game identity and values before saying player settings were confirmed. That evidence is API readback, not visual movement. Existing projects cannot switch game types through an edit.
+
+Free-game setup streams two pinned official archives, verifies SHA-256, rejects unsafe archive entries, bounds download/extraction size and stages installation before rename. It retains upstream license files and never overwrites an unknown existing runtime. Luanti starts visibly with an explicit per-project world under `saves/Worlds/luanti`, a local-only connection, Lua sandbox enabled and a separate config/log. Its process lock survives the desktop app closing; engine caches may still be written inside the managed runtime.
+
 The local default model/configuration is preserved. The adapter supports model discovery, but the first UI uses the configured default. Credentials are not read, copied or proxied. Progress is derived from protocol events; no fabricated percentages or token balances.
 
 ## Storage and versions
@@ -33,7 +37,7 @@ Checkpoints contain only profile Worlds and Players. Recipe rollback and save re
 
 ## Execution evidence
 
-Schema, build, process start, and observed gameplay are different levels. Exported packages conservatively carry schema evidence only and `supportedVersions: unverified`. Their content hash proves consistency, not publisher identity or executable safety. The runtime/build/launch path needs real game verification before any stable release.
+Schema, build, process start, connected-player readback, and observed gameplay are different levels. Exported packages conservatively carry schema evidence only. Terraria packages declare versions unverified; Luanti packages name the tested engine/game pair. Their content hash proves consistency, not publisher identity or executable safety. Terraria still needs compilation and gameplay validation. Luanti has real client and recovery evidence, but visual movement and broader platform tests remain outstanding.
 
 ## Sharing
 

@@ -1,6 +1,6 @@
 {
   "name": "modalore",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Your games. Your rules. A local-first modding studio powered by your Codex CLI.",
   "author": "Modalore contributors",
   "license": "MIT",
@@ -23,7 +23,8 @@
   "dependencies": {
     "lucide-react": "^0.577.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "yauzl": "3.4.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
@@ -31,6 +32,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/yauzl": "3.4.0",
     "@vitejs/plugin-react": "latest",
     "electron": "45.2.2",
     "electron-builder": "26.18.0",
@@ -50,6 +52,7 @@
       "dist/**/*",
       "package.json",
       "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
       "!node_modules/**/*"
     ],
     "extraResources": [

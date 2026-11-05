@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.2 — 2026-11-05
+
+- A free first game: one-click, checksum-verified portable Luanti 5.18.0 and pinned Minetest Game setup.
+- Create speed, jump and gravity recipes with controls or your actual local Codex CLI, then launch a separate single-player world.
+- Confirm the connected player's physics settings using a fresh per-session engine report. This is distinct from visually observed movement.
+- Export/import Luanti recipes into clean playable profiles; legacy Terraria packages remain compatible and experimental.
+- Verified real Codex creation/revision → game launch → exact export/import → second game launch → checkpoint recovery on Windows.
 
 - Browse up to 30 earlier recipes, compare their values, and restore one while retaining the outgoing version and its attribution.
 - Archive projects without deleting their saves or history; bring them back from the Archived library view.
